@@ -210,7 +210,7 @@ void Avatar::loadSounds(const string& type_id) {
 	snd->unload(sound_hit);
 	snd->unload(sound_die);
 
-	if (type_id != "none") {
+	if (!type_id.empty()) {
 		sound_melee = snd->load("soundfx/enemies/" + type_id + "_phys.ogg", "Avatar melee attack");
 		sound_mental = snd->load("soundfx/enemies/" + type_id + "_ment.ogg", "Avatar mental attack");
 		sound_hit = snd->load("soundfx/enemies/" + type_id + "_hit.ogg", "Avatar was hit");
@@ -915,7 +915,7 @@ void Avatar::untransform() {
 		stats.vulnerable[i] = hero_stats->vulnerable[i];
 	}
 
-	loadSounds("none");
+	loadSounds();
 	loadStepFX(stats.sfx_step);
 
 	delete charmed_stats;
