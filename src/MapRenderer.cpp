@@ -248,6 +248,9 @@ int MapRenderer::load(const std::string& fname) {
 					if (i == fow->dark_layer_id) tile_set = &fow->tset_dark;
 					if (i == fow->fog_layer_id) tile_set = &fow->tset_fog;
 			    }
+			    if (eset->misc.fogofwar == FogOfWar::TYPE_TINT)
+					if (i == fow->dark_layer_id || i == fow->fog_layer_id)
+						continue;
 				
 				if (tile_id > 0 && (tile_id >= tile_set->tiles.size() || tile_set->tiles[tile_id].tile == NULL)) {
 					if (std::find(corrupted.begin(), corrupted.end(), tile_id) == corrupted.end()) {
@@ -729,7 +732,7 @@ void MapRenderer::renderIso(std::vector<Renderable> &r, std::vector<Renderable> 
 				map_parallax.render(cam.shake, layernames[index]);
 			}
 		}
-		else {
+		else if (layernames[index] != "fow_dark" && layernames[index] != "fow_fog") {
 			renderIsoLayer(layers[index], tset);
 			map_parallax.render(cam.shake, layernames[index]);
 		}

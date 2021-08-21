@@ -245,7 +245,7 @@ void SaveLoad::saveGame() {
 		}
 	}
 	
-	// Save fow
+	// Save fow dark layer
 	if (eset->misc.fogofwar && eset->misc.save_fogofwar) {
 		ss.str("");
 		ss << settings->path_user << "saves/" << eset->misc.save_prefix << "/" << game_slot << "/" << mapr->getFilename();
@@ -254,29 +254,10 @@ void SaveLoad::saveGame() {
 
 		if (outfile.is_open()) {
 			outfile << "[layer]" << std::endl;
-			outfile << "type=" << mapr->layernames[fow->fog_layer_id] << std::endl;
-			outfile << "data=" << std::endl;
-
-			std::string layer = "";
-			for (int line = 0; line < mapr->h; line++) {
-				std::stringstream map_row;
-				for (int tile = 0; tile < mapr->w; tile++) {
-					unsigned short val = mapr->layers[fow->fog_layer_id][tile][line];
-					map_row << val << ",";
-				}
-				layer += map_row.str();
-				layer += '\n';
-			}
-			layer.erase(layer.end()-2, layer.end());
-			layer += '\n';
-			outfile << layer << std::endl;
-
-			// dark_layer
-			outfile << "[layer]" << std::endl;
 			outfile << "type=" << mapr->layernames[fow->dark_layer_id] << std::endl;
 			outfile << "data=" << std::endl;
 
-			layer = "";
+			std::string layer = "";
 			for (int line = 0; line < mapr->h; line++) {
 				std::stringstream map_row;
 				for (int tile = 0; tile < mapr->w; tile++) {

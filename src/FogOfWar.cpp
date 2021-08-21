@@ -216,12 +216,24 @@ void FogOfWar::logic() {
 	}
 }
 
+void FogOfWar::handleIntramapTeleport() {
+	calcBoundaries();
+	
+	for (int x = bounds.x; x <= bounds.w; x++) {
+		for (int y = bounds.y; y <= bounds.h; y++) {
+			if (x>=0 && y>=0 && x < mapr->w && y < mapr->h) {
+				mapr->layers[fog_layer_id][x][y] = TILE_HIDDEN;
+			}
+		}
+	}
+}
+
 Color FogOfWar::getTileColorMod(const int_fast16_t x, const int_fast16_t y) {
-	if (mapr->layers[dark_layer_id][x][y] == TILE_VISITED)
+	if (mapr->layers[dark_layer_id][x][y] == 0 && mapr->layers[fog_layer_id][x][y] > 0)
 		return color_visited;
-	else if (mapr->layers[dark_layer_id][x][y] == TILE_HIDDEN)
+	else if (mapr->layers[dark_layer_id][x][y] > 0)
 		return color_hidden;
-	else
+	else 
 		return color_sight;
 }
 
@@ -245,13 +257,6 @@ void FogOfWar::calcMiniBoundaries() {
 }
 
 void FogOfWar::updateTiles() {
-	applyMask();
-	for(int i=0; i<mapr->layernames.size(); i++)
-		std::cout << i << " " << mapr->layernames[i] << std::endl;
-	
-}
-
-void FogOfWar::applyMask() {
 	calcBoundaries();
 	int radius = pc->sight;
 	const unsigned short * mask = &CIRCLE_MASK[radius - FOW_RADIUS_MIN][0];

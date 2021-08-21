@@ -92,7 +92,7 @@ public:
 	TileSet tset_fog;
 
 	void logic();
-	void applyMask();
+	void handleIntramapTeleport();
 	int load();
 	Color getTileColorMod(const int_fast16_t x, const int_fast16_t y);
 	std::vector<Sprite*> tile_numbers;
