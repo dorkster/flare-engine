@@ -201,9 +201,7 @@ FogOfWar::FogOfWar()
 
 int FogOfWar::load() {
 	tset_dark.load(tileset_dark);
-	std::cout << "tset_dark loaded\n";
 	tset_fog.load(tileset_fog);
-	std::cout << "tset_fog loaded\n";
 	return 0;
 }
 
@@ -275,7 +273,6 @@ void FogOfWar::updateTiles() {
 		}
 	}
 }
-
 
 FogOfWar::~FogOfWar() {
 }

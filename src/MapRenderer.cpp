@@ -725,17 +725,15 @@ void MapRenderer::renderIso(std::vector<Renderable> &r, std::vector<Renderable> 
 		if (eset->misc.fogofwar == FogOfWar::TYPE_OVERLAY) {
 			if (layernames[index] == "fow_dark") {
 				renderIsoLayer(layers[index],fow->tset_dark);
-				map_parallax.render(cam.shake, layernames[index]);
 			}
 			if (layernames[index] == "fow_fog") {
 				renderIsoLayer(layers[index],fow->tset_fog);
-				map_parallax.render(cam.shake, layernames[index]);
 			}
 		}
 		else if (layernames[index] != "fow_dark" && layernames[index] != "fow_fog") {
 			renderIsoLayer(layers[index], tset);
-			map_parallax.render(cam.shake, layernames[index]);
 		}
+		map_parallax.render(cam.shake, layernames[index]);
 		index++;
 	}
 

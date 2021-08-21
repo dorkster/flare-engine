@@ -152,7 +152,6 @@ int Map::load(const std::string& fname) {
 			if (infile.open(ss.str(), !FileParser::MOD_FILE, FileParser::ERROR_NORMAL)) {
 				while (infile.next()) {
 					if (infile.section == "layer") {
-						std::cout << "load layer from saved file\n";
 						loadLayer(infile);
 					}
 				}
@@ -160,7 +159,6 @@ int Map::load(const std::string& fname) {
 			}
 		}
 		if (std::find(layernames.begin(), layernames.end(), "fow_fog") == layernames.end()) {
-			std::cout << "reset fog layer\n";
 			layernames.push_back("fow_fog");
 			layers.resize(layers.size()+1);
 			layers.back().resize(w);
@@ -170,7 +168,6 @@ int Map::load(const std::string& fname) {
 		}
 
 		if (std::find(layernames.begin(), layernames.end(), "fow_dark") == layernames.end()) {
-			std::cout << "reset dark layer\n";
 			layernames.push_back("fow_dark");
 			layers.resize(layers.size()+1);
 			layers.back().resize(w);
