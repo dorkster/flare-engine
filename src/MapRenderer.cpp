@@ -220,9 +220,12 @@ int MapRenderer::load(const std::string& fname) {
 		if (layernames[i] == "object")
 			index_objectlayer = i;
 	if (eset->misc.fogofwar) {
-		for (unsigned short i = 0; i < layers.size(); ++i)
-			if (layernames[i] == "fogofwar")
-				fow->layer_id = i;
+		for (unsigned short i = 0; i < layers.size(); ++i) {
+			if (layernames[i] == "fow_dark")
+				fow->dark_layer_id = i;
+			if (layernames[i] == "fow_fog")
+				fow->fog_layer_id = i;
+		}
 	}
 
 	while (!enemy_groups.empty()) {
@@ -241,7 +244,7 @@ int MapRenderer::load(const std::string& fname) {
 				const unsigned tile_id = layers[i][x][y];
 				TileSet* tile_set = &tset;
 				
-				if (eset->misc.fogofwar == FogOfWar::TYPE_OVERLAY && i == fow->layer_id) {
+				if (eset->misc.fogofwar == FogOfWar::TYPE_OVERLAY && (i == fow->dark_layer_id || i == fow->fog_layer_id)) {
 					tile_set = &fow->tset;				
 			    }
 				
@@ -433,8 +436,8 @@ void MapRenderer::renderIsoLayer(const Map_Layer& layerdata, const TileSet& tile
 				dest.y = p.y - tile.offset.y;
 
 				if (eset->misc.fogofwar == FogOfWar::TYPE_OVERLAY)
-					if (&layerdata != &layers[fow->layer_id])
-						if (layers[fow->layer_id][i][j] == FogOfWar::TILE_HIDDEN) continue;
+					if (&layerdata != &layers[fow->dark_layer_id])
+						if (layers[fow->dark_layer_id][i][j] == FogOfWar::TILE_HIDDEN) continue;
 
 				// no need to set w and h in dest, as it is ignored
 				// by SDL_BlitSurface
@@ -444,8 +447,9 @@ void MapRenderer::renderIsoLayer(const Map_Layer& layerdata, const TileSet& tile
 				}
 				render_device->render(tile.tile);
 
+				//debug fow tiles
 				if (eset->misc.fogofwar == FogOfWar::TYPE_OVERLAY)
-					if (&layerdata == &layers[fow->layer_id]) {
+					if (&layerdata == &layers[fow->dark_layer_id]) {
 						Sprite* tile_spr = fow->tile_numbers[current_tile];
 						tile_spr->setDestFromPoint(dest);
 						render_device->render(tile_spr);
@@ -544,8 +548,8 @@ void MapRenderer::renderIsoFrontObjects(std::vector<Renderable> &r) {
 					const Tile_Def &tile = tset.tiles[current_tile];
 
 					if (eset->misc.fogofwar == FogOfWar::TYPE_OVERLAY)
-						if (&current_layer != &layers[fow->layer_id])
-							if (layers[fow->layer_id][i][j] == FogOfWar::TILE_HIDDEN) continue;
+						if (&current_layer != &layers[fow->dark_layer_id])
+							if (layers[fow->dark_layer_id][i][j] == FogOfWar::TILE_HIDDEN) continue;
 
 					dest.x = p.x - tile.offset.x;
 					dest.y = p.y - tile.offset.y;
@@ -712,7 +716,7 @@ void MapRenderer::renderIso(std::vector<Renderable> &r, std::vector<Renderable> 
 
 	index++;
 	while (index < layers.size()) {
-		if (eset->misc.fogofwar == FogOfWar::TYPE_OVERLAY && layernames[index] == "fogofwar") {
+		if (eset->misc.fogofwar == FogOfWar::TYPE_OVERLAY && layernames[index] == "fow_dark") {
 			renderIsoLayer(layers[index],fow->tset);
 			map_parallax.render(cam.shake, layernames[index]);
 		}
@@ -753,8 +757,8 @@ void MapRenderer::renderOrthoLayer(const Map_Layer& layerdata) {
 				dest.y = p.y - tile.offset.y;
 
 				if (eset->misc.fogofwar == FogOfWar::TYPE_OVERLAY)
-					if (&layerdata != &layers[fow->layer_id])
-						if (layers[fow->layer_id][i][j] == FogOfWar::TILE_HIDDEN) continue;
+					if (&layerdata != &layers[fow->dark_layer_id])
+						if (layers[fow->dark_layer_id][i][j] == FogOfWar::TILE_HIDDEN) continue;
 
 				tile.tile->setDestFromPoint(dest);
 				if (eset->misc.fogofwar == FogOfWar::TYPE_TINT) {
@@ -806,8 +810,8 @@ void MapRenderer::renderOrthoFrontObjects(std::vector<Renderable> &r) {
 				dest.y = p.y - tile.offset.y;
 
 				if (eset->misc.fogofwar == FogOfWar::TYPE_OVERLAY)
-					if (&layers[index_objectlayer] != &layers[fow->layer_id])
-						if (layers[fow->layer_id][i][j] == FogOfWar::TILE_HIDDEN) continue;
+					if (&layers[index_objectlayer] != &layers[fow->dark_layer_id])
+						if (layers[fow->dark_layer_id][i][j] == FogOfWar::TILE_HIDDEN) continue;
 
 				tile.tile->setDestFromPoint(dest);
 				checkHiddenEntities(i, j, layers[index_objectlayer], r);

@@ -153,7 +153,8 @@ const unsigned short FogOfWar::CIRCLE_MASK[NUM_FOW_RADII][FOW_MAX_RADIUS_LENGTH 
 };
 
 FogOfWar::FogOfWar()
-	: layer_id(0)
+	: dark_layer_id(0)
+	, fog_layer_id(0)
 	, tileset("tilesetdefs/tileset_fogofwar.txt")
 	, bounds(0,0,0,0)
 	, color_sight(255,255,255)
@@ -180,16 +181,7 @@ int FogOfWar::load() {
 }
 
 void FogOfWar::logic() {
-	updateTiles(TILE_SIGHT);
-	if (update_minimap) {
-		calcMiniBoundaries();
-		menu->mini->update(&mapr->collider, &bounds);
-		update_minimap = false;
-	}
-}
-
-void FogOfWar::handleIntramapTeleport() {
-	updateTiles(TILE_VISITED);
+	updateTiles();
 	if (update_minimap) {
 		calcMiniBoundaries();
 		menu->mini->update(&mapr->collider, &bounds);
@@ -198,9 +190,9 @@ void FogOfWar::handleIntramapTeleport() {
 }
 
 Color FogOfWar::getTileColorMod(const int_fast16_t x, const int_fast16_t y) {
-	if (mapr->layers[layer_id][x][y] == TILE_VISITED)
+	if (mapr->layers[dark_layer_id][x][y] == TILE_VISITED)
 		return color_visited;
-	else if (mapr->layers[layer_id][x][y] == TILE_HIDDEN)
+	else if (mapr->layers[dark_layer_id][x][y] == TILE_HIDDEN)
 		return color_hidden;
 	else
 		return color_sight;
@@ -225,7 +217,7 @@ void FogOfWar::calcMiniBoundaries() {
 	if (bounds.h > mapr->h) bounds.h = mapr->h;
 }
 
-void FogOfWar::updateTiles(unsigned short sight_tile) {
+void FogOfWar::updateTiles() {
 	applyMask();
 }
 
@@ -237,9 +229,9 @@ void FogOfWar::applyMask() {
 	for (int x = bounds.x; x <= bounds.w; x++) {
 		for (int y = bounds.y; y <= bounds.h; y++) {
 			if (x>=0 && y>=0 && x < mapr->w && y < mapr->h) {
-				unsigned short prev_tile = mapr->layers[layer_id][x][y];
-				mapr->layers[layer_id][x][y] &= *mask;
-				if ((prev_tile == TILE_HIDDEN) && prev_tile != mapr->layers[layer_id][x][y]) {
+				unsigned short prev_tile = mapr->layers[dark_layer_id][x][y];
+				mapr->layers[dark_layer_id][x][y] &= *mask;
+				if ((prev_tile == TILE_HIDDEN) && prev_tile != mapr->layers[dark_layer_id][x][y]) {
 					update_minimap = true;
 				}
 			}
