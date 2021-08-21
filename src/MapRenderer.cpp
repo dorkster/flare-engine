@@ -248,7 +248,7 @@ int MapRenderer::load(const std::string& fname) {
 					if (i == fow->dark_layer_id) tile_set = &fow->tset_dark;
 					if (i == fow->fog_layer_id) tile_set = &fow->tset_fog;
 			    }
-			    if (eset->misc.fogofwar == FogOfWar::TYPE_TINT)
+			    if (eset->misc.fogofwar)
 					if (i == fow->dark_layer_id || i == fow->fog_layer_id)
 						continue;
 				
