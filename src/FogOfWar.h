@@ -86,8 +86,10 @@ public:
 
 	unsigned short dark_layer_id;
 	unsigned short fog_layer_id;
-	std::string tileset;
-	TileSet tset;
+	std::string tileset_dark;
+	std::string tileset_fog;
+	TileSet tset_dark;
+	TileSet tset_fog;
 
 	void logic();
 	void applyMask();

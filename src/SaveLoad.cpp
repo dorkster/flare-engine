@@ -281,7 +281,6 @@ void SaveLoad::saveGame() {
 				std::stringstream map_row;
 				for (int tile = 0; tile < mapr->w; tile++) {
 					unsigned short val = mapr->layers[fow->dark_layer_id][tile][line];
-					//if (val == FogOfWar::TILE_SIGHT) val = FogOfWar::TILE_VISITED;
 					map_row << val << ",";
 				}
 				layer += map_row.str();

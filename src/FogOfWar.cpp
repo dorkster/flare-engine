@@ -155,7 +155,8 @@ const unsigned short FogOfWar::CIRCLE_MASK[NUM_FOW_RADII][FOW_MAX_RADIUS_LENGTH 
 FogOfWar::FogOfWar()
 	: dark_layer_id(0)
 	, fog_layer_id(0)
-	, tileset("tilesetdefs/tileset_fogofwar.txt")
+	, tileset_dark("tilesetdefs/tileset_fow_dark.txt")
+	, tileset_fog("tilesetdefs/tileset_fow_fog.txt")
 	, bounds(0,0,0,0)
 	, color_sight(255,255,255)
 	, color_visited(128,128,128)
@@ -175,8 +176,10 @@ FogOfWar::FogOfWar()
 }
 
 int FogOfWar::load() {
-	tset.load(tileset);
-
+	tset_dark.load(tileset_dark);
+	std::cout << "tset_dark loaded\n";
+	tset_fog.load(tileset_fog);
+	std::cout << "tset_fog loaded\n";
 	return 0;
 }
 
@@ -219,6 +222,9 @@ void FogOfWar::calcMiniBoundaries() {
 
 void FogOfWar::updateTiles() {
 	applyMask();
+	for(int i=0; i<mapr->layernames.size(); i++)
+		std::cout << i << " " << mapr->layernames[i] << std::endl;
+	
 }
 
 void FogOfWar::applyMask() {
