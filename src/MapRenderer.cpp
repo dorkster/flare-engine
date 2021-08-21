@@ -246,7 +246,7 @@ int MapRenderer::load(const std::string& fname) {
 				
 				if (eset->misc.fogofwar == FogOfWar::TYPE_OVERLAY) {
 					if (i == fow->dark_layer_id) tile_set = &fow->tset_dark;
-					//if (i == fow->fog_layer_id) tile_set = &fow->tset_fog;
+					if (i == fow->fog_layer_id) tile_set = &fow->tset_fog;
 			    }
 				
 				if (tile_id > 0 && (tile_id >= tile_set->tiles.size() || tile_set->tiles[tile_id].tile == NULL)) {

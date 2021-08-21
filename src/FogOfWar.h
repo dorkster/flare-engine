@@ -58,7 +58,7 @@ FLARE.  If not, see http://www.gnu.org/licenses/
 #define	fow_JSE					(FOW_BIT_S | FOW_BIT_SE | FOW_BIT_E)
 
 #define	FOW_RADIUS_MIN			3
-#define	FOW_RADIUS_MAX			9
+#define	FOW_RADIUS_MAX			10
 #define	NUM_FOW_RADII			((FOW_RADIUS_MAX - FOW_RADIUS_MIN) + 1)
 
 #define	FOW_MAX_RADIUS_LENGTH	((FOW_RADIUS_MAX * 2) + 1)
