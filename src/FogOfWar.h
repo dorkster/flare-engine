@@ -88,6 +88,7 @@ public:
 	unsigned short fog_layer_id;
 	std::string tileset_dark;
 	std::string tileset_fog;
+	std::string mask_definition;
 	TileSet tset_dark;
 	TileSet tset_fog;
 
@@ -101,6 +102,17 @@ public:
 	~FogOfWar();
 
 private:
+	unsigned short mask_radius;
+	unsigned short bits_per_tile;;
+	std::map<std::string, char> def_bits;
+	std::map<std::string, short> def_tiles;
+	unsigned short *def_mask;
+
+	void loadHeader(FileParser &infile);
+	void loadBits(FileParser &infile);
+	void loadTilesBits(FileParser &infile);
+	void loadMaskBits(FileParser &infile);
+
 	Rect bounds;
 
 	Color color_sight;

@@ -27,6 +27,7 @@ FLARE.  If not, see http://www.gnu.org/licenses/
 
 #include "Avatar.h"
 #include "EngineSettings.h"
+#include "FileParser.h"
 #include "FogOfWar.h"
 #include "FontEngine.h"
 #include "MapRenderer.h"
@@ -36,6 +37,7 @@ FLARE.  If not, see http://www.gnu.org/licenses/
 #include "RenderDevice.h"
 #include "SharedGameResources.h"
 #include "SharedResources.h"
+#include "UtilsParsing.h"
 
 const unsigned short FogOfWar::CIRCLE_MASK[NUM_FOW_RADII][FOW_MAX_RADIUS_LENGTH * FOW_MAX_RADIUS_LENGTH] = {
 	// radius 3
@@ -181,6 +183,7 @@ FogOfWar::FogOfWar()
 	, fog_layer_id(0)
 	, tileset_dark("tilesetdefs/tileset_fow_dark.txt")
 	, tileset_fog("tilesetdefs/tileset_fow_fog.txt")
+	, mask_definition("engine/fow_mask.txt")
 	, bounds(0,0,0,0)
 	, color_sight(255,255,255)
 	, color_visited(128,128,128)
@@ -200,6 +203,26 @@ FogOfWar::FogOfWar()
 }
 
 int FogOfWar::load() {
+	FileParser infile;
+
+	if (!infile.open(mask_definition, FileParser::MOD_FILE, FileParser::ERROR_NORMAL))
+		return 0;
+
+	Utils::logInfo("FOW: Loading mask '%s'", mask_definition.c_str());
+
+	while (infile.next()) {
+		if (infile.section == "header")
+			loadHeader(infile);
+		/*else if (infile.section == "bits")
+			loadBits(infile);
+		else if (infile.section == "tiles")
+			loadTileBits(infile);
+		else if (infile.section == "mask")
+			loadMaskBits(infile);*/
+	}
+
+	infile.close();
+
 	tset_dark.load(tileset_dark);
 	tset_fog.load(tileset_fog);
 	return 0;
@@ -271,6 +294,20 @@ void FogOfWar::updateTiles() {
 			}
 			mask++;
 		}
+	}
+}
+
+void FogOfWar::loadHeader(FileParser &infile) {
+	if (infile.key == "radius") {
+		// @ATTR masK_radius|int|Fog of war mask radius
+		this->mask_radius = static_cast<unsigned short>(std::max(Parse::toInt(infile.val), 1));
+	}
+	else if (infile.key == "bits_per_tile") {
+		// @ATTR bits_per_tile|int|Number of "sub-tiles"
+		this->bits_per_tile = static_cast<unsigned short>(std::max(Parse::toInt(infile.val), 1));
+	}
+	else {
+		infile.error("FOW: '%s' is not a valid key.", infile.key.c_str());
 	}
 }
 
