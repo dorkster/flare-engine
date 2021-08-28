@@ -38,6 +38,7 @@ FLARE.  If not, see http://www.gnu.org/licenses/
 #include "SharedGameResources.h"
 #include "SharedResources.h"
 #include "UtilsParsing.h"
+//#include <utility>
 
 const unsigned short FogOfWar::CIRCLE_MASK[NUM_FOW_RADII][FOW_MAX_RADIUS_LENGTH * FOW_MAX_RADIUS_LENGTH] = {
 	// radius 3
@@ -213,12 +214,12 @@ int FogOfWar::load() {
 	while (infile.next()) {
 		if (infile.section == "header")
 			loadHeader(infile);
-		/*else if (infile.section == "bits")
-			loadBits(infile);
+		else if (infile.section == "bits")
+			loadDefBit(infile);
 		else if (infile.section == "tiles")
-			loadTileBits(infile);
-		else if (infile.section == "mask")
-			loadMaskBits(infile);*/
+			loadDefTile(infile);
+		//else if (infile.section == "mask")
+		//	loadMaskBits(infile);
 	}
 
 	infile.close();
@@ -301,14 +302,54 @@ void FogOfWar::loadHeader(FileParser &infile) {
 	if (infile.key == "radius") {
 		// @ATTR masK_radius|int|Fog of war mask radius
 		this->mask_radius = static_cast<unsigned short>(std::max(Parse::toInt(infile.val), 1));
+		std::cout << mask_radius << std::endl;
 	}
 	else if (infile.key == "bits_per_tile") {
 		// @ATTR bits_per_tile|int|Number of "sub-tiles"
 		this->bits_per_tile = static_cast<unsigned short>(std::max(Parse::toInt(infile.val), 1));
+		std::cout << bits_per_tile << std::endl;
 	}
 	else {
 		infile.error("FOW: '%s' is not a valid key.", infile.key.c_str());
 	}
+}
+
+void FogOfWar::loadDefBit(FileParser &infile) {
+	unsigned short val = static_cast<unsigned short>(Parse::toInt(infile.val));
+	unsigned short bit = 0;
+
+	if (val > 0) {
+		bit = 1 << (val - 1);
+	}
+
+	def_bits.insert(std::pair<std::string, unsigned short>(infile.key, bit));
+}
+
+void FogOfWar::loadDefTile(FileParser &infile) {
+	std::string val = Parse::stripCarriageReturn(infile.val);
+	std::string bit;
+	std::map<std::string, unsigned short>::iterator it;
+	unsigned short tile_bits = 0;
+	unsigned long prev_comma = 0;
+	unsigned long comma = 0;
+
+	while (prev_comma < val.length()) {
+		comma = val.find(",", prev_comma+1);
+		if(prev_comma == 0)
+			bit = val.substr(0, comma-prev_comma);
+		else
+			bit = val.substr(prev_comma+1, comma-prev_comma-1);
+
+		bit = Parse::trim(bit);
+		it = def_bits.find(bit);
+
+		if (it != def_bits.end())
+			tile_bits = tile_bits | it->second;
+
+		prev_comma = comma;
+	}
+
+	def_tiles.insert(std::pair<std::string, unsigned short>(infile.key, tile_bits));
 }
 
 FogOfWar::~FogOfWar() {

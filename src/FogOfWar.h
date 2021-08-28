@@ -103,15 +103,15 @@ public:
 
 private:
 	unsigned short mask_radius;
-	unsigned short bits_per_tile;;
-	std::map<std::string, char> def_bits;
-	std::map<std::string, short> def_tiles;
+	unsigned short bits_per_tile;
+	std::map<std::string, unsigned short> def_bits;
+	std::map<std::string, unsigned short> def_tiles;
 	unsigned short *def_mask;
 
 	void loadHeader(FileParser &infile);
-	void loadBits(FileParser &infile);
-	void loadTilesBits(FileParser &infile);
-	void loadMaskBits(FileParser &infile);
+	void loadDefBit(FileParser &infile);
+	void loadDefTile(FileParser &infile);
+	void loadDefMask(FileParser &infile);
 
 	Rect bounds;
 
