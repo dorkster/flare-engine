@@ -36,6 +36,7 @@ FLARE.  If not, see http://www.gnu.org/licenses/
 #include "EntityManager.h"
 #include "EngineSettings.h"
 #include "FileParser.h"
+#include "FogOfWar.h"
 #include "GameState.h"
 #include "GameStateCutscene.h"
 #include "GameStatePlay.h"
@@ -97,6 +98,7 @@ GameStatePlay::GameStatePlay()
 
 	loot = new LootManager();
 	powers = new PowerManager();
+	fow = new FogOfWar();
 	mapr = new MapRenderer();
 	pc = new Avatar();
 	entitym = new EntityManager();
@@ -291,6 +293,10 @@ void GameStatePlay::checkTeleport() {
 
 	// both map events and player powers can cause teleportation
 	if (mapr->teleportation || pc->stats.teleportation) {
+		
+		if (eset->misc.fogofwar)
+			if(fow->fog_layer_id != 0)
+				fow->handleIntramapTeleport();
 
 		mapr->collider.unblock(pc->stats.pos.x, pc->stats.pos.y);
 
@@ -327,6 +333,9 @@ void GameStatePlay::checkTeleport() {
 			inpt->lock_all = (teleport_mapname == "maps/spawn.txt");
 			mapr->executeOnMapExitEvents();
 			showLoading();
+			save_load->saveGame();
+			if (eset->misc.fogofwar == FogOfWar::TYPE_OVERLAY)
+				fow->load();
 			mapr->load(teleport_mapname);
 			setLoadingFrame();
 
@@ -388,6 +397,9 @@ void GameStatePlay::checkTeleport() {
 		}
 
 		mapr->collider.block(pc->stats.pos.x, pc->stats.pos.y, !MapCollision::IS_ALLY);
+
+		if (eset->misc.fogofwar)
+			fow->logic();
 
 		pc->stats.teleportation = false;
 	}

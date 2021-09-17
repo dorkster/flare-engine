@@ -1,0 +1,5 @@
+# Miscellaneous engine settings
+APPEND
+
+fogofwar=3
+save_fogofwar=true

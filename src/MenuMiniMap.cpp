@@ -29,6 +29,7 @@ FLARE.  If not, see http://www.gnu.org/licenses/
 #include "EntityManager.h"
 #include "EngineSettings.h"
 #include "FileParser.h"
+#include "FogOfWar.h"
 #include "FontEngine.h"
 #include "InputState.h"
 #include "MapCollision.h"
@@ -64,6 +65,7 @@ MenuMiniMap::MenuMiniMap()
 	, current_zoom(1)
 	, lock_zoom_change(false)
 	, clicked_config(false)
+
 {
 	std::string bg_filename;
 
@@ -264,6 +266,17 @@ void MenuMiniMap::prerender(MapCollision *collider, int map_w, int map_h) {
 		prerenderOrtho(collider, &map_surface_2x, &map_surface_entities_2x, 2);
 	}
 }
+void MenuMiniMap::update(MapCollision *collider, Rect *bounds) {
+	if (eset->tileset.orientation == eset->tileset.TILESET_ISOMETRIC) {
+		updateIso(collider, &map_surface, 1, bounds);
+		updateIso(collider, &map_surface_2x, 2, bounds);
+	}
+	else {
+		// eset->tileset.TILESET_ORTHOGONAL
+		updateOrtho(collider, &map_surface, 1, bounds);
+		updateOrtho(collider, &map_surface_2x, 2, bounds);
+	}
+}
 
 void MenuMiniMap::renderMapSurface(const FPoint& hero_pos) {
 
@@ -341,6 +354,46 @@ void MenuMiniMap::prerenderOrtho(MapCollision *collider, Sprite** tile_surface, 
 			else if (tile_type == 2 || tile_type == 6) draw_color = color_obst;
 			else draw_tile = false;
 
+			if (eset->misc.fogofwar) {
+				tile_type = mapr->layers[fow->dark_layer_id][i][j];
+				if (tile_type == FogOfWar::TILE_HIDDEN) draw_tile = false;
+			}
+
+			if (draw_tile && draw_color.a != 0) {
+				for (int l = 0; l < zoom; l++) {
+					for (int k =0; k < zoom; k++) {
+						target_img->drawPixel((zoom*i)+k, (zoom*j)+l, draw_color);
+					}
+				}
+			}
+		}
+	}
+
+	target_img->endPixelBatch();
+}
+void MenuMiniMap::updateOrtho(MapCollision *collider, Sprite** tile_surface, int zoom, Rect *bounds) {
+
+	if (!(*tile_surface))
+		return;
+
+	Image* target_img = (*tile_surface)->getGraphics();
+
+	Color draw_color;
+
+	target_img->beginPixelBatch();
+
+	for (int i=bounds->x; i<=bounds->w; i++) {
+		for (int j=bounds->y; j<=bounds->h; j++) {
+			bool draw_tile = true;
+			int tile_type = collider->colmap[i][j];
+
+			if (tile_type == 1 || tile_type == 5) draw_color = color_wall;
+			else if (tile_type == 2 || tile_type == 6) draw_color = color_obst;
+			else draw_tile = false;
+
+			tile_type = mapr->layers[fow->dark_layer_id][i][j];
+			if (tile_type != 0) draw_tile = false;
+
 			if (draw_tile && draw_color.a != 0) {
 				for (int l = 0; l < zoom; l++) {
 					for (int k =0; k < zoom; k++) {
@@ -394,8 +447,94 @@ void MenuMiniMap::prerenderIso(MapCollision *collider, Sprite** tile_surface, Sp
 				if (tile_type == 1 || tile_type == 5) draw_color = color_wall;
 				else if (tile_type == 2 || tile_type == 6) draw_color = color_obst;
 				else draw_tile = false;
-
+				
+				if (eset->misc.fogofwar) {
+					tile_type = mapr->layers[fow->dark_layer_id][tile_cursor.x][tile_cursor.y];
+					if (tile_type == FogOfWar::TILE_HIDDEN) draw_tile = false;
+				}
+				
 				if (draw_tile && draw_color.a != 0) {
+					if (odd_row) {
+						for (int l = 0; l < zoom; l++) {
+							for (int k = 0; k < zoom * 2; k++) {
+								target_img->drawPixel((zoom*i)+k, (zoom*j)+l, draw_color);
+							}
+						}
+					}
+					else {
+						for (int l = 0; l < zoom; l++) {
+							for (int k = -((zoom * 2) - zoom); k < zoom; k++) {
+								target_img->drawPixel((zoom*i)+k, (zoom*j)+l, draw_color);
+							}
+						}
+					}
+				}
+			}
+
+			// moving screen-right in isometric is +x -y in map coordinates
+			tile_cursor.x++;
+			tile_cursor.y--;
+		}
+
+		// return tile cursor to next row of tiles
+		if (odd_row) {
+			odd_row = false;
+			tile_cursor.x -= target_w/2;
+			tile_cursor.y += (target_w/2 +1);
+		}
+		else {
+			odd_row = true;
+			tile_cursor.x -= (target_w/2 -1);
+			tile_cursor.y += target_w/2;
+		}
+	}
+
+	target_img->endPixelBatch();
+}
+
+void MenuMiniMap::updateIso(MapCollision *collider, Sprite** tile_surface, int zoom, Rect *bounds) {
+		
+	if (!(*tile_surface))
+		return;
+
+	// a 2x1 pixel area correlates to a tile, so we can traverse tiles using pixel counting
+	Color draw_color;
+	int tile_type;
+
+	Point tile_cursor;
+	tile_cursor.x = -std::max(map_size.x, map_size.y)/2;
+	tile_cursor.y = std::max(map_size.x, map_size.y)/2;
+
+	bool odd_row = false;
+
+	Image* target_img = (*tile_surface)->getGraphics();
+	const int target_w = (*tile_surface)->getGraphicsWidth();
+	const int target_h = (*tile_surface)->getGraphicsHeight();
+
+	target_img->beginPixelBatch();
+
+	// for each pixel row
+	for (int j=0; j<target_h; j++) {
+
+		// for each 2-px wide column
+		for (int i=0; i<target_w; i+=2) {
+
+			// if this tile is the max map size
+			if (tile_cursor.x >= bounds->x && tile_cursor.y >= bounds->y && tile_cursor.x < bounds->w && tile_cursor.y < bounds->h) {
+
+				tile_type = collider->colmap[tile_cursor.x][tile_cursor.y];
+				bool draw_tile = true;
+
+				// walls and low obstacles show as different colors
+				if (tile_type == 1 || tile_type == 5) draw_color = color_wall;
+				else if (tile_type == 2 || tile_type == 6) draw_color = color_obst;
+				else draw_tile = false;
+				
+				// fog of war
+				tile_type = mapr->layers[fow->dark_layer_id][tile_cursor.x][tile_cursor.y];
+				if (tile_type != 0) draw_tile = false;
+
+				if (draw_tile) {
 					if (odd_row) {
 						for (int l = 0; l < zoom; l++) {
 							for (int k = 0; k < zoom * 2; k++) {
@@ -582,6 +721,12 @@ void MenuMiniMap::fillEntities() {
 			continue;
 
 		if (mapr->events[i].getComponent(EventComponent::NPC_HOTSPOT) && EventManager::isActive(mapr->events[i])) {
+			if (eset->misc.fogofwar) {
+				float delta = Utils::calcDist(pc->stats.pos, mapr->events[i].center);
+				if (delta > fow->mask_radius) {
+					continue;
+				}
+			}
 			entities[mapr->events[i].location.x][mapr->events[i].location.y] = TILE_NPC;
 		}
 		else if ((mapr->events[i].activate_type == Event::ACTIVATE_ON_TRIGGER || mapr->events[i].activate_type == Event::ACTIVATE_ON_INTERACT) && mapr->events[i].getComponent(EventComponent::INTERMAP) && EventManager::isActive(mapr->events[i])) {
@@ -589,6 +734,9 @@ void MenuMiniMap::fillEntities() {
 			Point event_pos(mapr->events[i].location.x, mapr->events[i].location.y);
 			for (int j=event_pos.x; j<event_pos.x + mapr->events[i].location.w; ++j) {
 				for (int k=event_pos.y; k<event_pos.y + mapr->events[i].location.h; ++k) {
+					if (eset->misc.fogofwar)
+						if (mapr->layers[fow->dark_layer_id][event_pos.x][event_pos.y] == FogOfWar::TILE_HIDDEN) continue;
+
 					entities[j][k] = TILE_TELEPORT;
 				}
 			}
@@ -598,6 +746,12 @@ void MenuMiniMap::fillEntities() {
 	for (size_t i=0; i<entitym->entities.size(); ++i) {
 		Entity *e = entitym->entities[i];
 		if (e->stats.hp > 0) {
+			if (eset->misc.fogofwar) {
+				float delta = Utils::calcDist(pc->stats.pos, e->stats.pos);
+				if (delta > fow->mask_radius) {
+					continue;
+				}
+			}
 			if (e->stats.hero_ally) {
 				entities[static_cast<int>(e->stats.pos.x)][static_cast<int>(e->stats.pos.y)] = TILE_ALLY;
 			}

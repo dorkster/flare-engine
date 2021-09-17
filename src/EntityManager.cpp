@@ -30,6 +30,7 @@ FLARE.  If not, see http://www.gnu.org/licenses/
 #include "EngineSettings.h"
 #include "EntityBehavior.h"
 #include "EventManager.h"
+#include "FogOfWar.h"
 #include "Hazard.h"
 #include "MapRenderer.h"
 #include "MenuActionBar.h"
@@ -491,6 +492,13 @@ void EntityManager::spawn(const std::string& entity_type, const Point& target) {
 void EntityManager::addRenders(std::vector<Renderable> &r, std::vector<Renderable> &r_dead) {
 	std::vector<Entity*>::iterator it;
 	for (it = entities.begin(); it != entities.end(); ++it) {
+		if (eset->misc.fogofwar > FogOfWar::TYPE_MINIMAP) {
+			float delta = Utils::calcDist(pc->stats.pos, (*it)->stats.pos);
+			if (delta > fow->mask_radius-1.0) {
+				continue;
+			}
+		}
+
 		bool dead = (*it)->stats.corpse;
 		if (!dead || !(*it)->stats.corpse_timer.isEnd()) {
 			Renderable re = (*it)->getRender();
