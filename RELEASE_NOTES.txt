@@ -1,4 +1,24 @@
-Flare v1.12 (WIP)
+Flare v1.13 (WIP)
+
+Engine fixes:
+
+* Fix enemies not being able to target NPC followers
+* Fix loot and sound effects being cleared in StatBlock files with multiple sections
+* Fix potential crash when removing summons that would be out-of-bounds on the next map.
+* Fix bug where a damage type with no name could be removed if another damage type was defined after it.
+* Don't show hidden stats under 'Related Stats' section of tooltips of Character menu.
+* Fix bug where negative regen wouldn't work if the resource was 100% full.
+* Fix bug where negative regen would overflow after reaching zero.
+
+Game updates:
+
+* New formula for the 'Shield' power. Instead of Mental Damage, it is now based off a combination of player level, Mental stat, and Defense stat. This should increase its usefulness on mixed builds.
+* Added 'Super' and 'Ultra' variants of Health and Mana potions. They can be obtained through the Alchemy system.
+* Fixed Alchemist's Skirt so that it works with all potions.
+
+
+
+Flare v1.12 (https://flarerpg.org/2021/08/02/flare-1-12/)
 
 Engine features:
 
@@ -107,10 +127,11 @@ Game updates:
 * Reduced the strength and radius of Rakk's freeze attack
 * Fixed the Goblin Thief being able to steal potions from a Summoned Zombie
 * Reduced the hitbox for spike traps
-* Greatly reduced the damage for spike traps in the Underworld. In exchange, the traps now inflict bleeding.
+* Greatly reduced the damage for spike traps. In exchange, the traps now inflict bleeding.
 * New alchemy ingredient: Mushrooms
 * Added 4 new potion recipes
 * Overall reduced drop rates for alchemy items
+* Added Alchemy quest
 * Added animations for immunity and ice-based slow status effects
 * Redesigned the Family Crypt map and quest
 * Redesigned the Nazia Mines maps and quest
