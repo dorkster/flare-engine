@@ -841,6 +841,8 @@ void MapRenderer::renderOrthoLayer(const Map_Layer& layerdata, const TileSet& ti
 				dest.x = p.x - tile.offset.x;
 				dest.y = p.y - tile.offset.y;
 
+				bool skip_tile_render = false;
+
 				//skip rendering tiles that are underneath fow hidden tiles
 				if (fogofwar == FogOfWar::TYPE_OVERLAY) {
 					if (&layerdata != &layers[fow->dark_layer_id]) {
@@ -877,7 +879,7 @@ void MapRenderer::renderOrthoLayer(const Map_Layer& layerdata, const TileSet& ti
 								if (layers[fow->dark_layer_id][t_r.x][t_r.y] == FogOfWar::TILE_HIDDEN) {
 									if (layers[fow->dark_layer_id][b_l.x][b_l.y] == FogOfWar::TILE_HIDDEN) {
 										if (layers[fow->dark_layer_id][b_r.x][b_r.y] == FogOfWar::TILE_HIDDEN) {
-											continue;
+											skip_tile_render = true;
 										}
 									}
 								}
@@ -887,10 +889,12 @@ void MapRenderer::renderOrthoLayer(const Map_Layer& layerdata, const TileSet& ti
 				}
 
 				tile.tile->setDestFromPoint(dest);
-				if (fogofwar == FogOfWar::TYPE_TINT) {
-					tile.tile->color_mod = fow->getTileColorMod(i, j);
+				if (!skip_tile_render) {
+					if (fogofwar == FogOfWar::TYPE_TINT) {
+						tile.tile->color_mod = fow->getTileColorMod(i, j);
+					}
+					render_device->render(tile.tile);
 				}
-				render_device->render(tile.tile);
 			}
 			p.x += eset->tileset.tile_w;
 		}
@@ -936,6 +940,8 @@ void MapRenderer::renderOrthoFrontObjects(std::vector<Renderable> &r) {
 				dest.y = p.y - tile.offset.y;
 				tile.tile->setDestFromPoint(dest);
 
+				bool skip_tile_render = false;
+
 				//skip rendering tiles that are underneath fow hidden tiles
 				if (fogofwar == FogOfWar::TYPE_OVERLAY) {
 					if (&layers[index_objectlayer] != &layers[fow->dark_layer_id]) {
@@ -972,7 +978,7 @@ void MapRenderer::renderOrthoFrontObjects(std::vector<Renderable> &r) {
 								if (layers[fow->dark_layer_id][t_r.x][t_r.y] == FogOfWar::TILE_HIDDEN) {
 									if (layers[fow->dark_layer_id][b_l.x][b_l.y] == FogOfWar::TILE_HIDDEN) {
 										if (layers[fow->dark_layer_id][b_r.x][b_r.y] == FogOfWar::TILE_HIDDEN) {
-											continue;
+											skip_tile_render = true;
 										}
 									}
 								}
@@ -982,10 +988,12 @@ void MapRenderer::renderOrthoFrontObjects(std::vector<Renderable> &r) {
 				}
 
 				checkHiddenEntities(i, j, layers[index_objectlayer], r);
-				if (fogofwar == FogOfWar::TYPE_TINT) {
-					tile.tile->color_mod = fow->getTileColorMod(i, j);
+				if (!skip_tile_render) {
+					if (fogofwar == FogOfWar::TYPE_TINT) {
+						tile.tile->color_mod = fow->getTileColorMod(i, j);
+					}
+					render_device->render(tile.tile);
 				}
-				render_device->render(tile.tile);
 			}
 			p.x += eset->tileset.tile_w;
 
