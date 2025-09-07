@@ -146,9 +146,51 @@ public:
 	}
 };
 
+class Chunk {
+public:
+    enum {
+        TYPE_EMPTY = 0,
+		TYPE_LINKS,
+        TYPE_NORMAL,
+        TYPE_START,
+        TYPE_END,
+        TYPE_KEY,
+        TYPE_DOOR_NORTH_SOUTH,
+        TYPE_DOOR_WEST_EAST,
+        TYPE_BRANCH,
+        TYPE_COUNT
+    };
+
+    enum {
+        LINK_NORTH = 0,
+        LINK_SOUTH,
+        LINK_WEST,
+        LINK_EAST,
+        LINK_COUNT,
+    };
+
+    int type;
+    int door_level;
+	std::vector<Chunk*> links;
+
+    Chunk()
+        : type(TYPE_EMPTY)
+        , door_level(0)
+		, links(4, NULL)
+    {}
+
+    bool isStraight();
+	void print();
+};
+
 class Map {
 protected:
 	static const bool EXIT_ON_FAIL = true;
+
+	enum {
+		PATH_MAIN = 0,
+		PATH_BRANCH
+	};
 
 	void loadHeader(FileParser &infile);
 	bool loadLayer(FileParser &infile, bool exit_on_fail = EXIT_ON_FAIL);
@@ -162,6 +204,19 @@ protected:
 
 	std::string filename;
 	std::string tileset;
+
+	Chunk* procGenWalkSingle(int path_type, size_t cur_x, size_t cur_y, int walk_x, int walk_y);
+	int procGenCreatePath(int path_type, int desired_length, int* _door_count, size_t start_x, size_t start_y);
+	void procGenFillArea(const std::string& config_filename, const Rect& area);
+
+	void copyTileLayer(Map* src, size_t layer_index, size_t src_x, size_t src_y, size_t src_w, size_t src_h, size_t x_offset, size_t y_offset);
+
+	std::vector< std::vector<Chunk> > procgen_chunks;
+	std::vector<Point> procgen_branch_roots;
+
+	int procgen_doors_max;
+	int procgen_branches_per_door_level_max;
+
 public:
 	Map();
 	~Map();
@@ -170,7 +225,7 @@ public:
 	void setTileset(const std::string& tset) { tileset = tset; }
 	void removeLayer(unsigned index);
 
-	int load(const std::string& filename);
+	int load(const std::string& filename, bool is_mod_file = true);
 
 	std::string music_filename;
 
@@ -206,6 +261,8 @@ public:
 	Color background_color;
 	unsigned short fogofwar;
 	bool save_fogofwar;
+	bool force_spawn_pos;
+	size_t procgen_type;
 
 };
 

@@ -26,6 +26,7 @@ FLARE.  If not, see http://www.gnu.org/licenses/
 #include "FileParser.h"
 #include "FogOfWar.h"
 #include "Map.h"
+#include "MapSaver.h"
 #include "MapRenderer.h"
 #include "MessageEngine.h"
 #include "ModManager.h"
@@ -36,7 +37,9 @@ FLARE.  If not, see http://www.gnu.org/licenses/
 #include "SharedGameResources.h"
 #include "StatBlock.h"
 #include "Utils.h"
+#include "UtilsFileSystem.h"
 #include "UtilsParsing.h"
+#include <vector>
 
 void SpawnLevel::parse(FileParser &infile) {
 	std::string next = Parse::popFirstString(infile.val);
@@ -117,6 +120,8 @@ void SpawnLevel::applyToStatBlock(StatBlock *src_stats, StatBlock *ratio_stats) 
 
 Map::Map()
 	: filename("")
+	, procgen_doors_max(0)
+	, procgen_branches_per_door_level_max(0)
 	, layers()
 	, events()
 	, w(1)
@@ -125,7 +130,10 @@ Map::Map()
 	, hero_pos()
 	, background_color(0,0,0,0)
 	, fogofwar(eset->misc.fogofwar)
-	, save_fogofwar(eset->misc.save_fogofwar) {
+	, save_fogofwar(eset->misc.save_fogofwar)
+	, force_spawn_pos(false)
+	, procgen_type(Chunk::TYPE_EMPTY)
+{
 }
 
 Map::~Map() {
@@ -153,8 +161,10 @@ void Map::removeLayer(unsigned index) {
 	layers.erase(layers.begin() + index);
 }
 
-int Map::load(const std::string& fname) {
+int Map::load(const std::string& fname, bool is_mod_file) {
 	FileParser infile;
+
+	Map test;
 
 	clearEvents();
 	clearLayers();
@@ -165,6 +175,7 @@ int Map::load(const std::string& fname) {
 	background_color = Color(0,0,0,0);
 	fogofwar = eset->misc.fogofwar;
 	save_fogofwar = eset->misc.save_fogofwar;
+	force_spawn_pos = false;
 
 	w = 1;
 	h = 1;
@@ -173,7 +184,7 @@ int Map::load(const std::string& fname) {
 	hero_pos.y = 0;
 
 	// @CLASS Map|Description of maps/
-	if (!infile.open(fname, FileParser::MOD_FILE, FileParser::ERROR_NORMAL))
+	if (!infile.open(fname, is_mod_file, FileParser::ERROR_NORMAL))
 		return 0;
 
 	Utils::logInfo("Map: Loading map '%s'", fname.c_str());
@@ -205,6 +216,36 @@ int Map::load(const std::string& fname) {
 	}
 
 	infile.close();
+
+	// generate any procedural regions
+	int procgen_regions = 0;
+	for (size_t i = 0; i < events.size(); ++i) {
+		EventComponent *ec_procgen = events[i].getComponent(EventComponent::PROCGEN_FILENAME);
+		if (ec_procgen) {
+			if (procgen_regions == 0) {
+				procGenFillArea(ec_procgen->s, events[i].location);
+			}
+			procgen_regions++;
+		}
+	}
+
+	if (procgen_regions > 1) {
+		Utils::logInfo("Map: Warning! Only 1 'procgen_filename' event is supported.");
+	}
+
+	if (procgen_regions > 0) {
+		MapSaver map_saver(this);
+		std::stringstream ss;
+		ss.str("");
+		ss << settings->path_user << "saves/" << eset->misc.save_prefix << "/" << save_load->getGameSlot() << "/maps/" << Utils::hashString(filename) << ".txt";
+		// if (Filesystem::fileExists(ss.str())) {
+		// 	return load(ss.str(), !FileParser::MOD_FILE);
+		// }
+		map_saver.saveMap(ss.str(), "");
+
+		// we can't use the spawn position from the player's save file if we're generating a new map
+		force_spawn_pos = true;
+	}
 
 	if (fogofwar) fow->load();
 
@@ -329,6 +370,33 @@ void Map::loadHeader(FileParser &infile) {
 	}
 	else if (infile.key == "tileheight") {
 		// @ATTR tileheight|int|Inherited from Tiled map file. Unused by engine.
+	}
+	else if (infile.key == "procgen_type") {
+		// TODO @ATTR
+		if (infile.val == "links") {
+			procgen_type = Chunk::TYPE_LINKS;
+		}
+		else if (infile.val == "normal") {
+			procgen_type = Chunk::TYPE_NORMAL;
+		}
+		else if (infile.val == "start") {
+			procgen_type = Chunk::TYPE_START;
+		}
+		else if (infile.val == "end") {
+			procgen_type = Chunk::TYPE_END;
+		}
+		else if (infile.val == "key") {
+			procgen_type = Chunk::TYPE_KEY;
+		}
+		else if (infile.val == "door_north_south") {
+			procgen_type = Chunk::TYPE_DOOR_NORTH_SOUTH;
+		}
+		else if (infile.val == "door_west_east") {
+			procgen_type = Chunk::TYPE_DOOR_WEST_EAST;
+		}
+		else {
+			infile.error("Map: '%s' is not a valid procedural generation chunk type.", infile.val.c_str());
+		}
 	}
 	else if (infile.key == "orientation") {
 		// this is only used by Tiled when importing Flare maps
@@ -759,3 +827,576 @@ int Map::addEventStatBlock(Event &evnt) {
 
 	return static_cast<int>(statblocks.size())-1;
 }
+
+Chunk* Map::procGenWalkSingle(int path_type, size_t cur_x, size_t cur_y, int walk_x, int walk_y) {
+	if (procgen_chunks.empty())
+		return NULL;
+
+	size_t MAP_SIZE_X = procgen_chunks[0].size();
+	size_t MAP_SIZE_Y = procgen_chunks.size();
+
+    if (cur_x >= MAP_SIZE_X || cur_y >= MAP_SIZE_Y)
+        return NULL; // NOTE: should we always return a valid chunk instead?
+
+    Chunk* prev = &procgen_chunks[cur_y][cur_x];
+
+    if ((walk_x < 0 && cur_x == 0) || (walk_y < 0 && cur_y == 0))
+        return prev;
+    else if ((cur_x + walk_x >= MAP_SIZE_X) || (cur_y + walk_y >= MAP_SIZE_Y))
+        return prev;
+
+    Chunk* next = &procgen_chunks[cur_y + walk_y][cur_x + walk_x];
+
+    if (next->type == Chunk::TYPE_START)
+        return prev;
+    else if (next->type == Chunk::TYPE_END)
+        return prev;
+    else if (next->type == Chunk::TYPE_DOOR_NORTH_SOUTH || next->type == Chunk::TYPE_DOOR_WEST_EAST)
+        return prev;
+
+    // walking the main path doesn't allow overlapping existing path
+    // branches, on the other hand, can overlap if their door level is the same
+    if (path_type == PATH_MAIN) {
+        if (next->type != Chunk::TYPE_EMPTY)
+            return prev;
+    }
+
+    int link_count = 0;
+    for (int i = 0; i < Chunk::LINK_COUNT; ++i) {
+        if (next->links[i])
+            link_count++;
+    }
+
+    if (link_count > 0 && (next->door_level != prev->door_level || rand() % link_count > 0))
+        return prev;
+
+    return next;
+}
+
+int Map::procGenCreatePath(int path_type, int desired_length, int* _door_count, size_t start_x, size_t start_y) {
+	if (procgen_chunks.empty())
+		return 0;
+
+	size_t MAP_SIZE_X = procgen_chunks[0].size();
+	size_t MAP_SIZE_Y = procgen_chunks.size();
+
+    if (path_type == PATH_MAIN) {
+        // zero out the map data
+        for (size_t i = 0; i < MAP_SIZE_Y; ++i) {
+            for (size_t j = 0; j < MAP_SIZE_X; ++j) {
+                Chunk* chunk = &procgen_chunks[i][j];
+                chunk->type = Chunk::TYPE_EMPTY;
+                chunk->door_level = 0;
+                for (size_t k = 0; k < Chunk::LINK_COUNT; ++k) {
+                    chunk->links[k] = NULL;
+                }
+            }
+        }
+
+        procgen_branch_roots.clear();
+    }
+
+    // set start tile
+    size_t cur_x = 0;
+    size_t cur_y = 0;
+    if (path_type == PATH_MAIN) {
+        cur_x = rand() % MAP_SIZE_X;
+        cur_y = rand() % MAP_SIZE_Y;
+    }
+    else {
+        cur_x = start_x;
+        cur_y = start_y;
+    }
+    Chunk* current = &(procgen_chunks[cur_y][cur_x]);
+
+    if (path_type == PATH_MAIN)
+        current->type = Chunk::TYPE_START;
+
+    int steps = static_cast<int>((MAP_SIZE_X * MAP_SIZE_Y));
+
+    if (path_type == PATH_BRANCH)
+        steps = desired_length;
+
+    int door_count = 0;
+    int door_chance = 0;
+    int door_dist = 0;
+    int door_min_dist = procgen_doors_max > 0 ? std::max(2, desired_length / procgen_doors_max) : 0;
+    int path_length = 0;
+    int branch_chance = 0;
+    int branch_count = 0;
+    int max_branches = 2;
+
+    while (steps >= 0) {
+        int link = rand() % Chunk::LINK_COUNT;
+        Chunk* prev = current;
+
+		// if we're on a door chunk, we can only go in the direction opposite of the initial link
+		if (current->type == Chunk::TYPE_DOOR_NORTH_SOUTH && (link == Chunk::LINK_WEST || link == Chunk::LINK_EAST)) {
+			if (current->links[Chunk::LINK_NORTH])
+				link = Chunk::LINK_SOUTH;
+			else if (current->links[Chunk::LINK_SOUTH])
+				link = Chunk::LINK_NORTH;
+		}
+		else if (current->type == Chunk::TYPE_DOOR_WEST_EAST && (link == Chunk::LINK_NORTH || link == Chunk::LINK_SOUTH)) {
+			if (current->links[Chunk::LINK_WEST])
+				link = Chunk::LINK_EAST;
+			else if (current->links[Chunk::LINK_EAST])
+				link = Chunk::LINK_WEST;
+		}
+
+        switch (link) {
+            case Chunk::LINK_NORTH:
+                current = procGenWalkSingle(path_type, cur_x, cur_y, 0, -1);
+                if (current != prev) {
+                    prev->links[Chunk::LINK_NORTH] = current;
+                    current->links[Chunk::LINK_SOUTH] = prev;
+                    current->type = Chunk::TYPE_NORMAL;
+                    cur_y--;
+                    door_dist++;
+                    path_length++;
+                }
+                break;
+            case Chunk::LINK_SOUTH:
+                current = procGenWalkSingle(path_type, cur_x, cur_y, 0, 1);
+                if (current != prev) {
+                    prev->links[Chunk::LINK_SOUTH] = current;
+                    current->links[Chunk::LINK_NORTH] = prev;
+                    current->type = Chunk::TYPE_NORMAL;
+                    cur_y++;
+                    door_dist++;
+                    path_length++;
+                }
+                break;
+            case Chunk::LINK_WEST:
+                current = procGenWalkSingle(path_type, cur_x, cur_y, 1, 0);
+                if (current != prev) {
+                    prev->links[Chunk::LINK_EAST] = current;
+                    current->links[Chunk::LINK_WEST] = prev;
+                    current->type = Chunk::TYPE_NORMAL;
+                    cur_x++;
+                    door_dist++;
+                    path_length++;
+                }
+                break;
+            case Chunk::LINK_EAST:
+                current = procGenWalkSingle(path_type, cur_x, cur_y, -1, 0);
+                if (current != prev) {
+                    prev->links[Chunk::LINK_WEST] = current;
+                    current->links[Chunk::LINK_EAST] = prev;
+                    current->type = Chunk::TYPE_NORMAL;
+                    cur_x--;
+                    door_dist++;
+                    path_length++;
+                }
+                break;
+        };
+
+        if (current != prev) {
+            if (path_type == PATH_MAIN) {
+                if (prev->type != Chunk::TYPE_START && prev->isStraight() && door_count < procgen_doors_max && rand() % 100 < door_chance) {
+					if (prev->links[Chunk::LINK_NORTH] && prev->links[Chunk::LINK_SOUTH])
+						prev->type = Chunk::TYPE_DOOR_NORTH_SOUTH;
+					else if (prev->links[Chunk::LINK_WEST] && prev->links[Chunk::LINK_EAST])
+						prev->type = Chunk::TYPE_DOOR_WEST_EAST;
+					else {
+						// shouldn't be able to get here!
+						Utils::logError("Map: Trying to place door chunk, but links don't form a straight path.");
+					}
+                    prev->door_level++;
+                    current->door_level++;
+                    door_chance = 0;
+                    door_count++;
+                    door_dist = 0;
+                    branch_count = 0;
+                }
+
+                if (door_dist > door_min_dist) {
+					if (door_count == 0)
+						door_chance = 100;
+					else
+						door_chance += 5;
+				}
+
+                if (current->type == Chunk::TYPE_NORMAL && branch_count < max_branches && rand() % 100 < branch_chance) {
+                    procgen_branch_roots.push_back(Point(static_cast<int>(cur_x), static_cast<int>(cur_y)));
+                    branch_chance = 0;
+                    branch_count++;
+                }
+
+                branch_chance += 5;
+            }
+
+            current->door_level = prev->door_level;
+        }
+
+        steps--;
+    }
+
+    // last room is the end
+    if (path_type == PATH_MAIN)
+        current->type = Chunk::TYPE_END;
+
+    if (_door_count)
+        *_door_count = door_count;
+
+    return path_length;
+}
+
+void Map::procGenFillArea(const std::string& config_filename, const Rect& area) {
+	Utils::logInfo("Procgen filename: %s", config_filename.c_str());
+
+	size_t MAP_SIZE_X = 0;
+	size_t MAP_SIZE_Y = 0;
+
+	int main_path_length_min = 0;
+	int main_path_length_max = 0;
+	int main_path_attempts_max = 0;
+	int branch_length = 0;
+
+	std::vector<std::string> chunk_filenames;
+
+	FileParser infile;
+	if (infile.open(config_filename, FileParser::MOD_FILE, FileParser::ERROR_NORMAL)) {
+		while (infile.next()) {
+			if (infile.section == "settings") {
+				if (infile.key == "doors_max") {
+					procgen_doors_max = Parse::toInt(infile.val);
+				}
+				else if (infile.key == "main_path_length_min") {
+					main_path_length_min = Parse::toInt(infile.val);
+				}
+				else if (infile.key == "main_path_length_max") {
+					main_path_length_max = Parse::toInt(infile.val);
+				}
+				else if (infile.key == "main_path_attempts_max") {
+					main_path_attempts_max = Parse::toInt(infile.val);
+				}
+				else if (infile.key == "branch_length") {
+					branch_length = Parse::toInt(infile.val);
+				}
+				else if (infile.key == "branches_per_door_level_max") {
+					procgen_branches_per_door_level_max = Parse::toInt(infile.val);
+				}
+			}
+			else if (infile.section == "chunks") {
+				if (infile.key == "filename") {
+					chunk_filenames.push_back(infile.val);
+				}
+			}
+		}
+		infile.close();
+	}
+
+	// turn fog-of-war off when loading map chunks
+	bool temp_fow = eset->misc.fogofwar;
+	eset->misc.fogofwar = false;
+
+	std::vector< std::vector<Map*> > chunk_maps;
+	chunk_maps.resize(Chunk::TYPE_COUNT);
+
+	for (size_t i = 0; i < chunk_filenames.size(); ++i) {
+		Map *chunk_map = new Map();
+		if (chunk_map) {
+			chunk_map->load(chunk_filenames[i]);
+
+			if (MAP_SIZE_X == 0 && chunk_map->w > 0 && chunk_map->h > 0) {
+				MAP_SIZE_X = area.w / chunk_map->w;
+				MAP_SIZE_Y = area.h / chunk_map->h;
+				Utils::logInfo("Map: Set procedural generation region to %lux%lu chunks. Each chunk is %lux%lu.", MAP_SIZE_X, MAP_SIZE_Y, chunk_map->w, chunk_map->h);
+			}
+
+			if (chunk_map->procgen_type != Chunk::TYPE_EMPTY)
+				chunk_maps[chunk_map->procgen_type].push_back(chunk_map);
+		}
+	}
+
+	Rect link_rects[4];
+
+	if (!chunk_maps[Chunk::TYPE_LINKS].empty()) {
+		// the link rects are only taken from the first link chunk
+		Map* chunk_links = chunk_maps[Chunk::TYPE_LINKS][0];
+
+		for (size_t i = 0; i < chunk_links->events.size(); ++i) {
+			EventComponent *ec = chunk_links->events[i].getComponent(EventComponent::PROCGEN_LINK);
+			if (ec) {
+				if (ec->s == "north") {
+					link_rects[Chunk::LINK_NORTH] = chunk_links->events[i].location;
+				}
+				else if (ec->s == "south") {
+					link_rects[Chunk::LINK_SOUTH] = chunk_links->events[i].location;
+				}
+				else if (ec->s == "west") {
+					link_rects[Chunk::LINK_WEST] = chunk_links->events[i].location;
+				}
+				else if (ec->s == "east") {
+					link_rects[Chunk::LINK_EAST] = chunk_links->events[i].location;
+				}
+			}
+		}
+	}
+
+	eset->misc.fogofwar = temp_fow;
+
+	//
+	// BEGIN CHUNK GENERATION
+	//
+
+	procgen_chunks.clear();
+	procgen_chunks.resize(MAP_SIZE_Y, std::vector<Chunk>(MAP_SIZE_X));
+
+	std::vector< std::vector<Chunk*> > normal_chunks; // used to find chunks to change to key, treasure, etc.
+	procgen_branch_roots.clear();
+
+    normal_chunks.resize(procgen_doors_max);
+
+    int main_path_length = 0;
+    main_path_length_min = main_path_length_min == 0 ? static_cast<int>((MAP_SIZE_X * MAP_SIZE_Y) / 2) : std::max(3, main_path_length_min);
+    main_path_length_max = main_path_length_max == 0 ? static_cast<int>(MAP_SIZE_X * MAP_SIZE_Y) : std::max(main_path_length_min, main_path_length_max);
+    int gen_attempts = 0;
+    int door_count = 0;
+
+    while ((main_path_length < main_path_length_min || main_path_length > main_path_length_max) && gen_attempts < main_path_attempts_max) {
+        main_path_length = procGenCreatePath(PATH_MAIN, main_path_length, &door_count, 0, 0);
+
+        gen_attempts++;
+    }
+    printf("Main path length: %d. Generator attempts: %d\n", main_path_length, gen_attempts);
+
+    for (size_t i = 0; i < procgen_branch_roots.size(); ++i) {
+        procGenCreatePath(PATH_BRANCH, branch_length, NULL, procgen_branch_roots[i].x, procgen_branch_roots[i].y);
+        // map_chunks[branch_roots[i].second][branch_roots[i].first].type = Chunk::TYPE_BRANCH;
+    }
+
+	Point start_chunk;
+
+    // gather all normal chunks for placing keys/treasure/etc.
+    for (size_t i = 0; i < MAP_SIZE_Y; ++i) {
+        for (size_t j = 0; j < MAP_SIZE_X; ++j) {
+            Chunk* chunk = &procgen_chunks[i][j];
+
+            if (chunk->type == Chunk::TYPE_NORMAL && static_cast<size_t>(chunk->door_level) < normal_chunks.size()) {
+                normal_chunks[chunk->door_level].push_back(chunk);
+            }
+			else if (chunk->type == Chunk::TYPE_START) {
+				start_chunk.x = static_cast<int>(j);
+				start_chunk.y = static_cast<int>(i);
+			}
+        }
+    }
+
+    for (size_t i = 0; i < static_cast<size_t>(door_count); ++i) {
+        if (i >= normal_chunks.size())
+            break;
+
+        if (normal_chunks[i].empty()) {
+            // printf("Tried to place key, but no chunks on current door level: %d\n", i);
+            continue;
+        }
+
+        size_t chunk_index = rand() % normal_chunks[i].size();
+        Chunk* chunk = normal_chunks[i][chunk_index];
+        chunk->type = Chunk::TYPE_KEY;
+        normal_chunks[i].erase(normal_chunks[i].begin() + chunk_index);
+    }
+
+	for (size_t chunk_y = 0; chunk_y < procgen_chunks.size(); ++chunk_y) {
+		for (size_t chunk_x = 0; chunk_x < procgen_chunks[chunk_y].size(); ++chunk_x) {
+			Chunk* chunk = &procgen_chunks[chunk_y][chunk_x];
+			if (chunk->type == Chunk::TYPE_EMPTY)
+				continue;
+
+			if (chunk_maps[chunk->type].empty())
+				continue;
+
+			size_t chunk_map_index = 0;
+			if (chunk_maps[chunk->type].size() > 1)
+				chunk_map_index = rand() % chunk_maps[chunk->type].size();
+
+			Map* chunk_map = chunk_maps[chunk->type][chunk_map_index];
+
+			chunk_map_index = 0;
+			if (chunk_maps[Chunk::TYPE_LINKS].size() > 1)
+				chunk_map_index = rand() % chunk_maps[Chunk::TYPE_LINKS].size();
+
+			Map* chunk_map_links = chunk_maps[Chunk::TYPE_LINKS][chunk_map_index];
+
+			size_t x_offset = chunk_x * chunk_map->w;
+			size_t y_offset = chunk_y * chunk_map->h;
+
+			if (chunk->type == Chunk::TYPE_START) {
+				hero_pos.x = chunk_map->hero_pos.x + static_cast<float>(x_offset);
+				hero_pos.y = chunk_map->hero_pos.y + static_cast<float>(y_offset);
+			}
+
+			for (size_t layer_index = 0; layer_index < chunk_map->layers.size(); ++layer_index) {
+				copyTileLayer(chunk_map, layer_index, 0, 0, 0, 0, x_offset, y_offset);
+
+				// copy tile layers for links
+				if (chunk->links[Chunk::LINK_NORTH]) {
+					Rect *r = &link_rects[Chunk::LINK_NORTH];
+					copyTileLayer(chunk_map_links, layer_index, r->x, r->y, r->x + r->w, r->y + r->h, x_offset, y_offset);
+				}
+				if (chunk->links[Chunk::LINK_SOUTH]) {
+					Rect *r = &link_rects[Chunk::LINK_SOUTH];
+					copyTileLayer(chunk_map_links, layer_index, r->x, r->y, r->x + r->w, r->y + r->h, x_offset, y_offset);
+				}
+				if (chunk->links[Chunk::LINK_WEST]) {
+					Rect *r = &link_rects[Chunk::LINK_WEST];
+					copyTileLayer(chunk_map_links, layer_index, r->x, r->y, r->x + r->w, r->y + r->h, x_offset, y_offset);
+				}
+				if (chunk->links[Chunk::LINK_EAST]) {
+					Rect *r = &link_rects[Chunk::LINK_EAST];
+					copyTileLayer(chunk_map_links, layer_index, r->x, r->y, r->x + r->w, r->y + r->h, x_offset, y_offset);
+				}
+			}
+
+			for (size_t event_index = 0; event_index < chunk_map->events.size(); ++event_index) {
+				Event event = chunk_map->events[event_index];
+				event.location.x += static_cast<int>(x_offset);
+				event.location.y += static_cast<int>(y_offset);
+				event.hotspot.x += static_cast<int>(x_offset);
+				event.hotspot.y += static_cast<int>(y_offset);
+				event.center.x += static_cast<float>(x_offset);
+				event.center.y += static_cast<float>(y_offset);
+
+				for (size_t ec_index = 0; ec_index < event.components.size(); ++ec_index) {
+					EventComponent* ec = &event.components[ec_index];
+
+					if (ec->type == EventComponent::MAPMOD) {
+						ec->data[0].Int += static_cast<int>(x_offset);
+						ec->data[1].Int += static_cast<int>(y_offset);
+					}
+				}
+				events.push_back(event);
+			}
+
+		}
+	}
+
+	// print map to console
+	// TODO REMOVE!
+    for (size_t i = 0; i < MAP_SIZE_Y; ++i) {
+        for (size_t j = 0; j < MAP_SIZE_X; ++j) {
+            Chunk* chunk = &procgen_chunks[i][j];
+
+            switch (chunk->type) {
+                case Chunk::TYPE_EMPTY:
+                    printf(".");
+                    break;
+                case Chunk::TYPE_START:
+                    printf("\e[37;42m");
+                    chunk->print();
+                    printf("\e[0m");
+                    break;
+                case Chunk::TYPE_END:
+                    printf("\e[37;41m");
+                    chunk->print();
+                    printf("\e[0m");
+                    break;
+                case Chunk::TYPE_DOOR_NORTH_SOUTH:
+                    printf("\e[37;43m");
+                    chunk->print();
+                    printf("\e[0m");
+                    break;
+                case Chunk::TYPE_DOOR_WEST_EAST:
+                    printf("\e[37;43m");
+                    chunk->print();
+                    printf("\e[0m");
+                    break;
+                case Chunk::TYPE_KEY:
+                    printf("\e[37;44m");
+                    chunk->print();
+                    printf("\e[0m");
+                    break;
+                case Chunk::TYPE_BRANCH:
+                    printf("\e[37;45m");
+                    chunk->print();
+                    printf("\e[0m");
+                    break;
+                default:
+                    chunk->print();
+                    break;
+            };
+        }
+        printf("\n");
+	}
+
+	// cleanup
+	for (size_t i = 0; i < chunk_maps.size(); ++i) {
+		for (size_t j = 0; j < chunk_maps[i].size(); ++j) {
+			delete chunk_maps[i][j];
+		}
+	}
+}
+
+void Map::copyTileLayer(Map* src, size_t layer_index, size_t src_x, size_t src_y, size_t src_w, size_t src_h, size_t x_offset, size_t y_offset) {
+	if (src_w == 0)
+		src_w = src->layers[layer_index].size();
+	if (src_h == 0)
+		src_h = src->layers[layer_index].size();
+
+	for (size_t x = src_x; x < src_w; ++x) {
+		if (x + x_offset >= w)
+			continue;
+
+		for (size_t y = src_y; y < src_h; ++y) {
+			if (y + y_offset >= h)
+				continue;
+
+			layers[layer_index][x + x_offset][y + y_offset] = src->layers[layer_index][x][y];
+		}
+	}
+}
+
+bool Chunk::isStraight() {
+    return ((links[LINK_NORTH] && links[LINK_SOUTH] && !links[LINK_WEST] && !links[LINK_EAST]) || (!links[LINK_NORTH] && !links[LINK_SOUTH] && links[LINK_WEST] && links[LINK_EAST]));
+}
+
+void Chunk::print() {
+    if (links[LINK_NORTH] && links[LINK_SOUTH] && links[LINK_WEST] && links[LINK_EAST]) {
+        printf("╬");
+    }
+    else if (links[LINK_NORTH] && links[LINK_WEST] && links[LINK_EAST]) {
+        printf("╩");
+    }
+    else if (links[LINK_SOUTH] && links[LINK_WEST] && links[LINK_EAST]) {
+        printf("╦");
+    }
+    else if (links[LINK_NORTH] && links[LINK_SOUTH] && links[LINK_WEST]) {
+        printf("╣");
+    }
+    else if (links[LINK_NORTH] && links[LINK_SOUTH] && links[LINK_EAST]) {
+        printf("╠");
+    }
+    else if (links[LINK_WEST] && links[LINK_EAST]) {
+        printf("═");
+    }
+    else if (links[LINK_NORTH] && links[LINK_SOUTH]) {
+        printf("║");
+    }
+    else if (links[LINK_EAST] && links[LINK_SOUTH]) {
+        printf("╔");
+    }
+    else if (links[LINK_WEST] && links[LINK_SOUTH]) {
+        printf("╗");
+    }
+    else if (links[LINK_EAST] && links[LINK_NORTH]) {
+        printf("╚");
+    }
+    else if (links[LINK_WEST] && links[LINK_NORTH]) {
+        printf("╝");
+    }
+    else if (links[LINK_NORTH]) {
+        printf("╨");
+    }
+    else if (links[LINK_SOUTH]) {
+        printf("╥");
+    }
+    else if (links[LINK_WEST]) {
+        printf("╡");
+    }
+    else if (links[LINK_EAST]) {
+        printf("╞");
+    }
+}
+

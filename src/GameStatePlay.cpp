@@ -337,7 +337,7 @@ void GameStatePlay::checkTeleport() {
 			setLoadingFrame();
 
 			// use the default hero spawn position for this map
-			if (mapr->teleport_destination.x == -1 && mapr->teleport_destination.y == -1) {
+			if (mapr->force_spawn_pos || (mapr->teleport_destination.x == -1 && mapr->teleport_destination.y == -1)) {
 				pc->stats.pos.x = mapr->hero_pos.x;
 				pc->stats.pos.y = mapr->hero_pos.y;
 				mapr->cam.warpTo(pc->stats.pos);

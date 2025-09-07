@@ -393,6 +393,9 @@ void SaveLoad::saveGame() {
 void SaveLoad::loadGame() {
 	if (game_slot <= 0) return;
 
+	// ensure that the save folder has all its sub-folders
+	Utils::createSaveDir(game_slot);
+
 	float saved_hp = 0;
 	float saved_mp = 0;
 	int currency = 0;
