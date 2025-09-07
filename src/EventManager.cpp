@@ -759,6 +759,18 @@ bool EventManager::loadEventComponentString(std::string &key, std::string &val, 
 		else
 			Utils::logError("EventManager: '%s' is not a valid random_status action.", mode.c_str());
 	}
+	else if (key == "procgen_filename") {
+		// @ATTR TODO
+		e->type = EventComponent::PROCGEN_FILENAME;
+
+		e->s = val;
+	}
+	else if (key == "procgen_link") {
+		// @ATTR TODO
+		e->type = EventComponent::PROCGEN_LINK;
+
+		e->s = val;
+	}
 	else {
 		return false;
 	}
