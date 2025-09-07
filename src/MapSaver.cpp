@@ -15,54 +15,60 @@ You should have received a copy of the GNU General Public License along with
 FLARE.  If not, see http://www.gnu.org/licenses/
 */
 
-#ifdef FLARE_MAP_SAVER
-
 #include "MapSaver.h"
+#include "EventManager.h"
 #include "Settings.h"
+#include "Utils.h"
 
 MapSaver::MapSaver(Map *_map) : map(_map)
 {
-	EVENT_COMPONENT_NAME[EC::TOOLTIP] = "tooltip";
-	EVENT_COMPONENT_NAME[EC::POWER_PATH] = "power_path";
-	EVENT_COMPONENT_NAME[EC::POWER_DAMAGE] = "power_damage";
-	EVENT_COMPONENT_NAME[EC::INTERMAP] = "intermap";
-	EVENT_COMPONENT_NAME[EC::INTRAMAP] = "intramap";
-	EVENT_COMPONENT_NAME[EC::MAPMOD] = "mapmod";
-	EVENT_COMPONENT_NAME[EC::SOUNDFX] = "soundfx";
-	EVENT_COMPONENT_NAME[EC::LOOT] = "loot"; // HALF-IMPLEMENTED
-	EVENT_COMPONENT_NAME[EC::LOOT_COUNT] = "loot_count"; // UNIMPLEMENTED
-	EVENT_COMPONENT_NAME[EC::MSG] = "msg";
-	EVENT_COMPONENT_NAME[EC::SHAKYCAM] = "shakycam";
-	EVENT_COMPONENT_NAME[EC::REQUIRES_STATUS] = "requires_status";
-	EVENT_COMPONENT_NAME[EC::REQUIRES_NOT_STATUS] = "requires_not_status";
-	EVENT_COMPONENT_NAME[EC::REQUIRES_LEVEL] = "requires_level";
-	EVENT_COMPONENT_NAME[EC::REQUIRES_NOT_LEVEL] = "requires_not_level";
-	EVENT_COMPONENT_NAME[EC::REQUIRES_CURRENCY] = "requires_currency";
-	EVENT_COMPONENT_NAME[EC::REQUIRES_NOT_CURRENCY] = "requires_not_currency";
-	EVENT_COMPONENT_NAME[EC::REQUIRES_ITEM] = "requires_item";
-	EVENT_COMPONENT_NAME[EC::REQUIRES_NOT_ITEM] = "requires_not_item";
-	EVENT_COMPONENT_NAME[EC::REQUIRES_CLASS] = "requires_class";
-	EVENT_COMPONENT_NAME[EC::REQUIRES_NOT_CLASS] = "requires_not_class";
-	EVENT_COMPONENT_NAME[EC::SET_STATUS] = "set_status";
-	EVENT_COMPONENT_NAME[EC::UNSET_STATUS] = "unset_status";
-	EVENT_COMPONENT_NAME[EC::REMOVE_CURRENCY] = "remove_currency";
-	EVENT_COMPONENT_NAME[EC::REMOVE_ITEM] = "remove_item";
-	EVENT_COMPONENT_NAME[EC::REWARD_XP] = "reward_xp";
-	EVENT_COMPONENT_NAME[EC::REWARD_CURRENCY] = "reward_currency";
-	EVENT_COMPONENT_NAME[EC::REWARD_ITEM] = "reward_item";
-	EVENT_COMPONENT_NAME[EC::RESTORE] = "restore";
-	EVENT_COMPONENT_NAME[EC::POWER] = "power";
-	EVENT_COMPONENT_NAME[EC::SPAWN] = "spawn";
-	EVENT_COMPONENT_NAME[EC::STASH] = "stash";
-	EVENT_COMPONENT_NAME[EC::NPC] = "npc";
-	EVENT_COMPONENT_NAME[EC::MUSIC] = "music";
-	EVENT_COMPONENT_NAME[EC::CUTSCENE] = "cutscene";
-	EVENT_COMPONENT_NAME[EC::REPEAT] = "repeat";
-	EVENT_COMPONENT_NAME[EC::SAVE_GAME] = "save_game";
-	EVENT_COMPONENT_NAME[EC::BOOK] = "book";
-	EVENT_COMPONENT_NAME[EC::SCRIPT] = "script";
-	EVENT_COMPONENT_NAME[EC::CHANCE_EXEC] = "chance_exec";
-	EVENT_COMPONENT_NAME[EC::RESPEC] = "respec";
+	EVENT_COMPONENT_NAME[EventComponent::TOOLTIP] = "tooltip";
+	EVENT_COMPONENT_NAME[EventComponent::POWER_PATH] = "power_path";
+	EVENT_COMPONENT_NAME[EventComponent::POWER_DAMAGE] = "power_damage";
+	EVENT_COMPONENT_NAME[EventComponent::INTERMAP] = "intermap";
+	EVENT_COMPONENT_NAME[EventComponent::INTRAMAP] = "intramap";
+	EVENT_COMPONENT_NAME[EventComponent::MAPMOD] = "mapmod";
+	EVENT_COMPONENT_NAME[EventComponent::SOUNDFX] = "soundfx";
+	EVENT_COMPONENT_NAME[EventComponent::LOOT] = "loot"; // HALF-IMPLEMENTED
+	EVENT_COMPONENT_NAME[EventComponent::LOOT_COUNT] = "loot_count"; // UNIMPLEMENTED
+	EVENT_COMPONENT_NAME[EventComponent::MSG] = "msg";
+	EVENT_COMPONENT_NAME[EventComponent::SHAKYCAM] = "shakycam";
+	EVENT_COMPONENT_NAME[EventComponent::REQUIRES_STATUS] = "requires_status";
+	EVENT_COMPONENT_NAME[EventComponent::REQUIRES_NOT_STATUS] = "requires_not_status";
+	EVENT_COMPONENT_NAME[EventComponent::REQUIRES_LEVEL] = "requires_level";
+	EVENT_COMPONENT_NAME[EventComponent::REQUIRES_NOT_LEVEL] = "requires_not_level";
+	EVENT_COMPONENT_NAME[EventComponent::REQUIRES_CURRENCY] = "requires_currency";
+	EVENT_COMPONENT_NAME[EventComponent::REQUIRES_NOT_CURRENCY] = "requires_not_currency";
+	EVENT_COMPONENT_NAME[EventComponent::REQUIRES_ITEM] = "requires_item";
+	EVENT_COMPONENT_NAME[EventComponent::REQUIRES_NOT_ITEM] = "requires_not_item";
+	EVENT_COMPONENT_NAME[EventComponent::REQUIRES_CLASS] = "requires_class";
+	EVENT_COMPONENT_NAME[EventComponent::REQUIRES_NOT_CLASS] = "requires_not_class";
+	EVENT_COMPONENT_NAME[EventComponent::SET_STATUS] = "set_status";
+	EVENT_COMPONENT_NAME[EventComponent::UNSET_STATUS] = "unset_status";
+	EVENT_COMPONENT_NAME[EventComponent::REMOVE_CURRENCY] = "remove_currency";
+	EVENT_COMPONENT_NAME[EventComponent::REMOVE_ITEM] = "remove_item";
+	EVENT_COMPONENT_NAME[EventComponent::REWARD_XP] = "reward_xp";
+	EVENT_COMPONENT_NAME[EventComponent::REWARD_CURRENCY] = "reward_currency";
+	EVENT_COMPONENT_NAME[EventComponent::REWARD_ITEM] = "reward_item";
+	EVENT_COMPONENT_NAME[EventComponent::REWARD_LOOT] = "reward_loot";
+	EVENT_COMPONENT_NAME[EventComponent::REWARD_LOOT_COUNT] = "reward_loot_count";
+	EVENT_COMPONENT_NAME[EventComponent::RESTORE] = "restore";
+	EVENT_COMPONENT_NAME[EventComponent::POWER] = "power";
+	EVENT_COMPONENT_NAME[EventComponent::SPAWN] = "spawn";
+	EVENT_COMPONENT_NAME[EventComponent::STASH] = "stash";
+	EVENT_COMPONENT_NAME[EventComponent::NPC] = "npc";
+	EVENT_COMPONENT_NAME[EventComponent::MUSIC] = "music";
+	EVENT_COMPONENT_NAME[EventComponent::CUTSCENE] = "cutscene";
+	EVENT_COMPONENT_NAME[EventComponent::REPEAT] = "repeat";
+	EVENT_COMPONENT_NAME[EventComponent::SAVE_GAME] = "save_game";
+	EVENT_COMPONENT_NAME[EventComponent::BOOK] = "book";
+	EVENT_COMPONENT_NAME[EventComponent::SCRIPT] = "script";
+	EVENT_COMPONENT_NAME[EventComponent::CHANCE_EXEC] = "chance_exec";
+	EVENT_COMPONENT_NAME[EventComponent::RESPEC] = "respec";
+	EVENT_COMPONENT_NAME[EventComponent::SHOW_ON_MINIMAP] = "show_on_minimap";
+	EVENT_COMPONENT_NAME[EventComponent::PARALLAX_LAYERS] = "parallax_layers";
+	EVENT_COMPONENT_NAME[EventComponent::RANDOM_STATUS] = "random_status";
+	EVENT_COMPONENT_NAME[EventComponent::PROCGEN_FILENAME] = "procgen_filename";
 
 	dest_file = map->getFilename();
 }
@@ -98,7 +104,7 @@ bool MapSaver::saveMap(const std::string& tileset_definitions)
 
 		if (outfile.bad())
 		{
-			logError("MapSaver: Unable to save the map. No write access or disk is full!");
+			Utils::logError("MapSaver: Unable to save the map. No write access or disk is full!");
 			return false;
 		}
 		outfile.close();
@@ -107,7 +113,7 @@ bool MapSaver::saveMap(const std::string& tileset_definitions)
 		return true;
 	}
 	else {
-		logError("MapSaver: Could not open %s for writing", dest_file.c_str());
+		Utils::logError("MapSaver: Could not open %s for writing", dest_file.c_str());
 	}
 	return false;
 }
@@ -131,7 +137,7 @@ void MapSaver::writeHeader(std::ofstream& map_file)
 	map_file << "music=" << map->music_filename << std::endl;
 	map_file << "tileset=" << map->getTileset() << std::endl;
 	map_file << "title=" << map->title << std::endl;
-	map_file << "hero_pos" << static_cast<int>(map->hero_pos.x) << "," << static_cast<int>(map->hero_pos.y) << std::endl;
+	map_file << "hero_pos=" << static_cast<int>(map->hero_pos.x) << "," << static_cast<int>(map->hero_pos.y) << std::endl;
 
 	map_file << std::endl;
 }
@@ -236,6 +242,7 @@ void MapSaver::writeEnemies(std::ofstream& map_file)
 			map_file << "wander_radius=" << group.front().wander_radius << std::endl;
 		}
 
+#if 0
 		for (unsigned i = 0; i < group.front().requires_status.size(); i++)
 		{
 			map_file << "requires_status=" << group.front().requires_status[i] << std::endl;
@@ -245,6 +252,7 @@ void MapSaver::writeEnemies(std::ofstream& map_file)
 		{
 			map_file << "requires_not_status=" << group.front().requires_not_status[i] << std::endl;
 		}
+#endif
 
 		map_file << std::endl;
 		group.pop();
@@ -254,6 +262,7 @@ void MapSaver::writeEnemies(std::ofstream& map_file)
 
 void MapSaver::writeNPCs(std::ofstream& map_file)
 {
+#if 0
 	std::queue<Map_NPC> npcs = map->npcs;
 
 	while (!npcs.empty())
@@ -285,6 +294,7 @@ void MapSaver::writeNPCs(std::ofstream& map_file)
 
 		npcs.pop();
 	}
+#endif
 }
 
 void MapSaver::writeEvents(std::ofstream& map_file)
@@ -305,23 +315,23 @@ void MapSaver::writeEvents(std::ofstream& map_file)
 		Rect location = map->events[i].location;
 		map_file << "location=" << location.x << "," << location.y << "," << location.w << "," << location.h  << std::endl;
 
-		if (map->events[i].activate_type == EVENT_ON_TRIGGER)
+		if (map->events[i].activate_type == Event::ACTIVATE_ON_TRIGGER)
 		{
 			map_file << "activate=on_trigger" << std::endl;
 		}
-		else if (map->events[i].activate_type == EVENT_ON_MAPEXIT)
+		else if (map->events[i].activate_type == Event::ACTIVATE_ON_MAPEXIT)
 		{
 			map_file << "activate=on_mapexit" << std::endl;
 		}
-		else if (map->events[i].activate_type == EVENT_ON_LEAVE)
+		else if (map->events[i].activate_type == Event::ACTIVATE_ON_LEAVE)
 		{
 			map_file << "activate=on_leave" << std::endl;
 		}
-		else if (map->events[i].activate_type == EVENT_ON_LOAD)
+		else if (map->events[i].activate_type == Event::ACTIVATE_ON_LOAD)
 		{
 			map_file << "activate=on_load" << std::endl;
 		}
-		else if (map->events[i].activate_type == EVENT_ON_CLEAR)
+		else if (map->events[i].activate_type == Event::ACTIVATE_ON_CLEAR)
 		{
 			map_file << "activate=on_clear" << std::endl;
 		}
@@ -336,6 +346,7 @@ void MapSaver::writeEvents(std::ofstream& map_file)
 			map_file << "hotspot=" << hotspot.x << "," << hotspot.y << "," << hotspot.w << "," << hotspot.h << std::endl;
 		}
 
+#if 0
 		if (map->events[i].cooldown != 0)
 		{
 			std::string suffix = "ms";
@@ -347,6 +358,7 @@ void MapSaver::writeEvents(std::ofstream& map_file)
 			}
 			map_file << "cooldown=" << value << suffix << std::endl;
 		}
+#endif
 
 		Rect reachable_from = map->events[i].reachable_from;
 		if (reachable_from.x != 0 && reachable_from.y != 0 && reachable_from.w != 0 && reachable_from.h != 0)
@@ -361,10 +373,11 @@ void MapSaver::writeEvents(std::ofstream& map_file)
 
 void MapSaver::writeEventComponents(std::ofstream &map_file, int eventID)
 {
-	std::vector<Event_Component> components = map->events[eventID].components;
+#if 0
+	std::vector<EventComponent> components = map->events[eventID].components;
 	for (unsigned i = 0; i < components.size(); i++)
 	{
-		Event_Component e = components[i];
+		EventComponent e = components[i];
 
 		if (e.type > 0 && e.type < EC_COUNT)
 		{
@@ -625,7 +638,6 @@ void MapSaver::writeEventComponents(std::ofstream &map_file, int eventID)
 			map_file << "," << e.y << endl;
 		}
 	}
+#endif
 }
-
-#endif //FLARE_MAP_SAVER
 
