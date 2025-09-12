@@ -356,7 +356,8 @@ bool EventManager::loadEventComponentString(std::string &key, std::string &val, 
 		// @ATTR event.requires_status|list(string)|Event requires list of statuses
 		e->type = EventComponent::REQUIRES_STATUS;
 
-		e->status = camp->registerStatus(Parse::popFirstString(val));
+		e->s = Parse::popFirstString(val);
+		e->status = camp->registerStatus(e->s);
 
 		// add repeating requires_status
 		if (evnt) {
@@ -365,6 +366,7 @@ bool EventManager::loadEventComponentString(std::string &key, std::string &val, 
 				evnt->components.push_back(EventComponent());
 				e = &evnt->components.back();
 				e->type = EventComponent::REQUIRES_STATUS;
+				e->s = repeat_val;
 				e->status = camp->registerStatus(repeat_val);
 
 				repeat_val = Parse::popFirstString(val);
@@ -375,7 +377,8 @@ bool EventManager::loadEventComponentString(std::string &key, std::string &val, 
 		// @ATTR event.requires_not_status|list(string)|Event requires not list of statuses
 		e->type = EventComponent::REQUIRES_NOT_STATUS;
 
-		e->status = camp->registerStatus(Parse::popFirstString(val));
+		e->s = Parse::popFirstString(val);
+		e->status = camp->registerStatus(e->s);
 
 		// add repeating requires_not
 		if (evnt) {
@@ -384,6 +387,7 @@ bool EventManager::loadEventComponentString(std::string &key, std::string &val, 
 				evnt->components.push_back(EventComponent());
 				e = &evnt->components.back();
 				e->type = EventComponent::REQUIRES_NOT_STATUS;
+				e->s = repeat_val;
 				e->status = camp->registerStatus(repeat_val);
 
 				repeat_val = Parse::popFirstString(val);
@@ -476,7 +480,8 @@ bool EventManager::loadEventComponentString(std::string &key, std::string &val, 
 		// @ATTR event.set_status|list(string)|Sets specified statuses
 		e->type = EventComponent::SET_STATUS;
 
-		e->status = camp->registerStatus(Parse::popFirstString(val));
+		e->s = Parse::popFirstString(val);
+		e->status = camp->registerStatus(e->s);
 
 		// add repeating set_status
 		if (evnt) {
@@ -485,6 +490,7 @@ bool EventManager::loadEventComponentString(std::string &key, std::string &val, 
 				evnt->components.push_back(EventComponent());
 				e = &evnt->components.back();
 				e->type = EventComponent::SET_STATUS;
+				e->s = repeat_val;
 				e->status = camp->registerStatus(repeat_val);
 
 				repeat_val = Parse::popFirstString(val);
@@ -495,7 +501,8 @@ bool EventManager::loadEventComponentString(std::string &key, std::string &val, 
 		// @ATTR event.unset_status|list(string)|Unsets specified statuses
 		e->type = EventComponent::UNSET_STATUS;
 
-		e->status = camp->registerStatus(Parse::popFirstString(val));
+		e->s = Parse::popFirstString(val);
+		e->status = camp->registerStatus(e->s);
 
 		// add repeating unset_status
 		if (evnt) {
@@ -504,6 +511,7 @@ bool EventManager::loadEventComponentString(std::string &key, std::string &val, 
 				evnt->components.push_back(EventComponent());
 				e = &evnt->components.back();
 				e->type = EventComponent::UNSET_STATUS;
+				e->s = repeat_val;
 				e->status = camp->registerStatus(repeat_val);
 
 				repeat_val = Parse::popFirstString(val);
@@ -732,7 +740,8 @@ bool EventManager::loadEventComponentString(std::string &key, std::string &val, 
 		if (mode == "append") {
 			e->data[0].Int = EventComponent::RANDOM_STATUS_MODE_APPEND;
 
-			e->status = camp->registerStatus(Parse::popFirstString(val));
+			e->s = Parse::popFirstString(val);
+			e->status = camp->registerStatus(e->s);
 
 			// add repeating random_status
 			if (evnt) {
@@ -742,6 +751,7 @@ bool EventManager::loadEventComponentString(std::string &key, std::string &val, 
 					e = &evnt->components.back();
 					e->type = EventComponent::RANDOM_STATUS;
 					e->data[0].Int = EventComponent::RANDOM_STATUS_MODE_APPEND;
+					e->s = repeat_val;
 					e->status = camp->registerStatus(repeat_val);
 
 					repeat_val = Parse::popFirstString(val);
