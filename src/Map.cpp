@@ -145,9 +145,10 @@ void Map::clearLayers() {
 	layernames.clear();
 }
 
-void Map::clearQueues() {
+void Map::clearEntities() {
 	enemies = std::queue<Map_Enemy>();
-	map_npcs = std::queue<Map_NPC>();
+	enemy_groups.clear();
+	map_npcs.clear();
 }
 
 void Map::clearEvents() {
@@ -161,14 +162,14 @@ void Map::removeLayer(unsigned index) {
 	layers.erase(layers.begin() + index);
 }
 
-int Map::load(const std::string& fname, bool is_mod_file) {
+int Map::load(const std::string& fname, bool load_procgen_cache) {
 	FileParser infile;
 
 	Map test;
 
 	clearEvents();
 	clearLayers();
-	clearQueues();
+	clearEntities();
 
 	music_filename = "";
 	parallax_filename = "";
@@ -183,9 +184,17 @@ int Map::load(const std::string& fname, bool is_mod_file) {
 	hero_pos.x = 0;
 	hero_pos.y = 0;
 
+	std::string procgen_filename = getProcgenFilename();
+
 	// @CLASS Map|Description of maps/
-	if (!infile.open(fname, is_mod_file, FileParser::ERROR_NORMAL))
-		return 0;
+	if (load_procgen_cache) {
+		if (!infile.open(procgen_filename, !FileParser::MOD_FILE, FileParser::ERROR_NORMAL))
+			return 0;
+	}
+	else {
+		if (!infile.open(fname, FileParser::MOD_FILE, FileParser::ERROR_NORMAL))
+			return 0;
+	}
 
 	Utils::logInfo("Map: Loading map '%s'", fname.c_str());
 
@@ -196,9 +205,9 @@ int Map::load(const std::string& fname, bool is_mod_file) {
 
 			// for sections that are stored in collections, add a new object here
 			if (infile.section == "enemy")
-				enemy_groups.push(Map_Group());
+				enemy_groups.push_back(Map_Group());
 			else if (infile.section == "npc")
-				map_npcs.push(Map_NPC());
+				map_npcs.push_back(Map_NPC());
 			else if (infile.section == "event")
 				events.push_back(Event());
 
@@ -233,21 +242,24 @@ int Map::load(const std::string& fname, bool is_mod_file) {
 		Utils::logInfo("Map: Warning! Only 1 'procgen_filename' event is supported.");
 	}
 
+	// if a previously generated map exists, load it from disk cache
+	// otherwise, save the generated map to disk
 	if (procgen_regions > 0) {
 		MapSaver map_saver(this);
-		std::stringstream ss;
-		ss.str("");
-		ss << settings->path_user << "saves/" << eset->misc.save_prefix << "/" << save_load->getGameSlot() << "/maps/" << Utils::hashString(filename) << ".txt";
-		// if (Filesystem::fileExists(ss.str())) {
-		// 	return load(ss.str(), !FileParser::MOD_FILE);
-		// }
-		map_saver.saveMap(ss.str(), "");
+		if (Filesystem::fileExists(procgen_filename)) {
+			return load(fname, Map::LOAD_PROCGEN_CACHE);
+		}
+		map_saver.saveMap(procgen_filename, "");
 
 		// we can't use the spawn position from the player's save file if we're generating a new map
 		force_spawn_pos = true;
 	}
 
-	if (fogofwar) fow->load();
+	// load fog-of-war configuration file
+	// TODO does this need to be done on every map load?
+	if (fogofwar) {
+		fow->load();
+	}
 
 	// create StatBlocks for events that need powers
 	for (unsigned i=0; i<events.size(); ++i) {
@@ -268,13 +280,11 @@ int Map::load(const std::string& fname, bool is_mod_file) {
 		}
 	}
 
-	// ensure that our map contains a fog of war layer
 	if (fogofwar) {
-		if (save_fogofwar) {
-			std::stringstream ss;
-			ss.str("");
-			ss << settings->path_user << "saves/" << eset->misc.save_prefix << "/" << save_load->getGameSlot() << "/fow/" << Utils::hashString(mapr->getFilename()) << ".txt";
-			if (infile.open(ss.str(), !FileParser::MOD_FILE, FileParser::ERROR_NORMAL)) {
+		// load the fog-of-war data from disk cache, unless this map was just procedurally generated
+		if (save_fogofwar && procgen_regions == 0) {
+			std::string fow_filename = getFOWFilename();
+			if (infile.open(fow_filename, !FileParser::MOD_FILE, FileParser::ERROR_NORMAL)) {
 				while (infile.next()) {
 					if (infile.section == "layer") {
 						if (!loadLayer(infile, !EXIT_ON_FAIL)) {
@@ -296,6 +306,8 @@ int Map::load(const std::string& fname, bool is_mod_file) {
 				infile.close();
 			}
 		}
+
+		// ensure that our map contains a fog of war layers
 		if (std::find(layernames.begin(), layernames.end(), "fow_fog") == layernames.end()) {
 			layernames.push_back("fow_fog");
 			layers.resize(layers.size()+1);
@@ -507,7 +519,7 @@ void Map::loadEnemyGroup(FileParser &infile, Map_Group *group) {
 			FPoint p;
 			p.x = static_cast<float>(Parse::toInt(a)) + 0.5f;
 			p.y = static_cast<float>(Parse::toInt(b)) + 0.5f;
-			group->waypoints.push(p);
+			group->waypoints.push_back(p);
 			a = Parse::popFirstString(infile.val);
 			b = Parse::popFirstString(infile.val);
 		}
@@ -520,9 +532,7 @@ void Map::loadEnemyGroup(FileParser &infile, Map_Group *group) {
 		group->wander_radius = std::max(0, Parse::popFirstInt(infile.val));
 
 		// clear waypoints, since wandering will use the waypoint queue
-		while (!group->waypoints.empty()) {
-			group->waypoints.pop();
-		}
+		group->waypoints.clear();
 	}
 	else if (infile.key == "requires_status") {
 		// @ATTR enemygroup.requires_status|list(string)|Statuses required to be set for enemy group to load
@@ -752,7 +762,7 @@ void Map::loadNPC(FileParser &infile) {
 			FPoint p;
 			p.x = static_cast<float>(Parse::toInt(a)) + 0.5f;
 			p.y = static_cast<float>(Parse::toInt(b)) + 0.5f;
-			map_npcs.back().waypoints.push(p);
+			map_npcs.back().waypoints.push_back(p);
 			a = Parse::popFirstString(infile.val);
 			b = Parse::popFirstString(infile.val);
 		}
@@ -765,9 +775,7 @@ void Map::loadNPC(FileParser &infile) {
 		map_npcs.back().wander_radius = std::max(0, Parse::popFirstInt(infile.val));
 
 		// clear waypoints, since wandering will use the waypoint queue
-		while (!map_npcs.back().waypoints.empty()) {
-			map_npcs.back().waypoints.pop();
-		}
+		map_npcs.back().waypoints.clear();
 	}
 	else {
 		infile.error("Map: '%s' is not a valid key.", infile.key.c_str());
@@ -1250,6 +1258,7 @@ void Map::procGenFillArea(const std::string& config_filename, const Rect& area) 
 				}
 			}
 
+			// copy and apply x/y offset to events
 			for (size_t event_index = 0; event_index < chunk_map->events.size(); ++event_index) {
 				Event event = chunk_map->events[event_index];
 				event.location.x += static_cast<int>(x_offset);
@@ -1258,16 +1267,62 @@ void Map::procGenFillArea(const std::string& config_filename, const Rect& area) 
 				event.hotspot.y += static_cast<int>(y_offset);
 				event.center.x += static_cast<float>(x_offset);
 				event.center.y += static_cast<float>(y_offset);
+				event.reachable_from.x += static_cast<int>(x_offset);
+				event.reachable_from.y += static_cast<int>(y_offset);
 
 				for (size_t ec_index = 0; ec_index < event.components.size(); ++ec_index) {
 					EventComponent* ec = &event.components[ec_index];
 
-					if (ec->type == EventComponent::MAPMOD) {
+					if (ec->type == EventComponent::POWER_PATH) {
+						ec->data[0].Int += static_cast<int>(x_offset);
+						ec->data[1].Int += static_cast<int>(y_offset);
+					}
+					else if (ec->type == EventComponent::INTRAMAP) {
+						ec->data[0].Int += static_cast<int>(x_offset);
+						ec->data[1].Int += static_cast<int>(y_offset);
+					}
+					else if (ec->type == EventComponent::MAPMOD) {
+						ec->data[0].Int += static_cast<int>(x_offset);
+						ec->data[1].Int += static_cast<int>(y_offset);
+					}
+					else if (ec->type == EventComponent::SOUNDFX) {
+						if (ec->data[0].Int != -1 && ec->data[1].Int != -1) {
+							ec->data[0].Int += static_cast<int>(x_offset);
+							ec->data[1].Int += static_cast<int>(y_offset);
+						}
+					}
+					else if (ec->type == EventComponent::SPAWN) {
 						ec->data[0].Int += static_cast<int>(x_offset);
 						ec->data[1].Int += static_cast<int>(y_offset);
 					}
 				}
 				events.push_back(event);
+			}
+
+			for (size_t egroup_index = 0; egroup_index < chunk_map->enemy_groups.size(); ++egroup_index) {
+				Map_Group enemy_group = chunk_map->enemy_groups[egroup_index];
+				enemy_group.pos.x += static_cast<int>(x_offset);
+				enemy_group.pos.y += static_cast<int>(y_offset);
+
+				for (size_t waypoint_index = 0; waypoint_index < enemy_group.waypoints.size(); ++waypoint_index) {
+					enemy_group.waypoints[waypoint_index].x += static_cast<float>(x_offset);
+					enemy_group.waypoints[waypoint_index].y += static_cast<float>(y_offset);
+				}
+
+				enemy_groups.push_back(enemy_group);
+			}
+
+			for (size_t npc_index = 0; npc_index < chunk_map->map_npcs.size(); ++npc_index) {
+				Map_NPC npc = chunk_map->map_npcs[npc_index];
+				npc.pos.x += static_cast<float>(x_offset);
+				npc.pos.y += static_cast<float>(y_offset);
+
+				for (size_t waypoint_index = 0; waypoint_index < npc.waypoints.size(); ++waypoint_index) {
+					npc.waypoints[waypoint_index].x += static_cast<float>(x_offset);
+					npc.waypoints[waypoint_index].y += static_cast<float>(y_offset);
+				}
+
+				map_npcs.push_back(npc);
 			}
 
 		}
@@ -1346,6 +1401,20 @@ void Map::copyTileLayer(Map* src, size_t layer_index, size_t src_x, size_t src_y
 			layers[layer_index][x + x_offset][y + y_offset] = src->layers[layer_index][x][y];
 		}
 	}
+}
+
+std::string Map::getProcgenFilename() {
+	std::stringstream ss;
+	ss.str("");
+	ss << settings->path_user << "saves/" << eset->misc.save_prefix << "/" << save_load->getGameSlot() << "/maps/" << Utils::hashString(filename) << ".txt";
+	return ss.str();
+}
+
+std::string Map::getFOWFilename() {
+	std::stringstream ss;
+	ss.str("");
+	ss << settings->path_user << "saves/" << eset->misc.save_prefix << "/" << save_load->getGameSlot() << "/fow/" << Utils::hashString(filename) << ".txt";
+	return ss.str();
 }
 
 bool Chunk::isStraight() {
