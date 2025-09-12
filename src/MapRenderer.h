@@ -52,7 +52,7 @@ private:
 	bool enemyGroupPlaceEnemy(float x, float y, const Map_Group &g);
 	void pushEnemyGroup(Map_Group &g);
 
-	void clearQueues();
+	void clearObjects();
 
 	void drawRenderable(std::vector<Renderable>::iterator r_cursor);
 
