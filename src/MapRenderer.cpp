@@ -82,8 +82,8 @@ MapRenderer::MapRenderer()
 {
 }
 
-void MapRenderer::clearQueues() {
-	Map::clearQueues();
+void MapRenderer::clearObjects() {
+	Map::clearEntities();
 	loot.clear();
 }
 
@@ -93,14 +93,16 @@ bool MapRenderer::enemyGroupPlaceEnemy(float x, float y, const Map_Group &g) {
 		if (!enemy_lev.type.empty()) {
 			Map_Enemy group_member = Map_Enemy(enemy_lev.type, FPoint(x, y));
 
-			group_member.direction = (g.direction == -1 ? rand()%8 : g.direction);
+			group_member.direction = (g.direction == -1 ? rand() % 8 : g.direction);
 			group_member.wander_radius = g.wander_radius;
 			group_member.requirements = g.requirements;
 			group_member.invincible_requirements = g.invincible_requirements;
 
 			if (g.area.x == 1 && g.area.y == 1) {
 				// this is a single enemy
-				group_member.waypoints = g.waypoints;
+				for (size_t i = 0; i < g.waypoints.size(); ++i) {
+					group_member.waypoints.push(g.waypoints[i]);
+				}
 			}
 
 			group_member.spawn_level = g.spawn_level;
@@ -216,9 +218,8 @@ int MapRenderer::load(const std::string& fname) {
 		}
 	}
 
-	while (!enemy_groups.empty()) {
-		pushEnemyGroup(enemy_groups.front());
-		enemy_groups.pop();
+	for (size_t i = 0; i < enemy_groups.size(); ++i) {
+		pushEnemyGroup(enemy_groups[i]);
 	}
 
 	tset.load(this->tileset);
@@ -1698,7 +1699,7 @@ MapRenderer::~MapRenderer() {
 	tip_buf.clear();
 	clearLayers();
 	clearEvents();
-	clearQueues();
+	clearObjects();
 	delete tip;
 
 	/* unload sounds */

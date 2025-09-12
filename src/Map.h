@@ -55,6 +55,8 @@ public:
 
 class Map_Group {
 public:
+	static const int DEFAULT_WANDER_RADIUS = 4;
+	static const int RANDOM_DIRECTION = -1;
 
 	std::string type;
 	std::string category;
@@ -66,7 +68,7 @@ public:
 	int numbermax;
 	float chance;
 	int direction;
-	std::queue<FPoint> waypoints;
+	std::vector<FPoint> waypoints;
 	int wander_radius;
 	std::vector<EventComponent> requirements;
 	std::vector<EventComponent> invincible_requirements;
@@ -82,9 +84,9 @@ public:
 		, numbermin(1)
 		, numbermax(1)
 		, chance(100.0f)
-		, direction(-1)
-		, waypoints(std::queue<FPoint>())
-		, wander_radius(4)
+		, direction(RANDOM_DIRECTION)
+		, waypoints()
+		, wander_radius(DEFAULT_WANDER_RADIUS)
 		, requirements()
 		, invincible_requirements()
 		, spawn_level() {
@@ -93,12 +95,15 @@ public:
 
 class Map_NPC {
 public:
+	static const int DEFAULT_WANDER_RADIUS = 0;
+	static const int RANDOM_DIRECTION = -1;
+
 	std::string type;
 	std::string id;
 	FPoint pos;
 	std::vector<EventComponent> requirements;
 	int direction;
-	std::queue<FPoint> waypoints;
+	std::vector<FPoint> waypoints;
 	int wander_radius;
 
 	Map_NPC()
@@ -106,9 +111,9 @@ public:
 		, id("")
 		, pos()
 		, requirements()
-		, direction(-1)
-		, waypoints(std::queue<FPoint>())
-		, wander_radius(0) {
+		, direction(RANDOM_DIRECTION)
+		, waypoints()
+		, wander_radius(DEFAULT_WANDER_RADIUS) {
 	}
 };
 
@@ -132,7 +137,7 @@ public:
 		, pos(_pos)
 		, direction(rand() % 8)
 		, waypoints(std::queue<FPoint>())
-		, wander_radius(4)
+		, wander_radius(Map_Group::DEFAULT_WANDER_RADIUS)
 		, hero_ally(false)
 		, enemy_ally(false)
 		, summon_power_index(0)
@@ -195,7 +200,7 @@ protected:
 	void loadNPC(FileParser &infile);
 
 	void clearLayers();
-	void clearQueues();
+	void clearEntities();
 
 	std::vector<StatBlock> statblocks;
 
@@ -215,6 +220,8 @@ protected:
 	int procgen_branches_per_door_level_max;
 
 public:
+	static const bool LOAD_PROCGEN_CACHE = true;
+
 	Map();
 	~Map();
 	std::string getFilename() { return filename; }
@@ -222,7 +229,7 @@ public:
 	void setTileset(const std::string& tset) { tileset = tset; }
 	void removeLayer(unsigned index);
 
-	int load(const std::string& filename, bool is_mod_file = true);
+	int load(const std::string& filename, bool load_procgen_cache = false);
 
 	std::string music_filename;
 
@@ -233,12 +240,15 @@ public:
 
 	int addEventStatBlock(Event &evnt);
 
+	std::string getProcgenFilename();
+	std::string getFOWFilename();
+
 	// enemy load handling
 	std::queue<Map_Enemy> enemies;
-	std::queue<Map_Group> enemy_groups;
+	std::vector<Map_Group> enemy_groups;
 
 	// npc load handling
-	std::queue<Map_NPC> map_npcs;
+	std::vector<Map_NPC> map_npcs;
 
 	// map events
 	std::vector<Event> events;
