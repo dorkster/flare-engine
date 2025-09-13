@@ -184,21 +184,24 @@ int Map::load(const std::string& fname, bool load_procgen_cache) {
 	hero_pos.x = 0;
 	hero_pos.y = 0;
 
+	Utils::logInfo("Map: Loading map '%s'", fname.c_str());
+
+	this->filename = fname;
+
 	std::string procgen_filename = getProcgenFilename();
 
 	// @CLASS Map|Description of maps/
 	if (load_procgen_cache) {
-		if (!infile.open(procgen_filename, !FileParser::MOD_FILE, FileParser::ERROR_NORMAL))
-			return 0;
+		if (!infile.open(procgen_filename, !FileParser::MOD_FILE, FileParser::ERROR_NORMAL)) {
+			// couldn't load cached map, try loading the original
+			if (!infile.open(fname, FileParser::MOD_FILE, FileParser::ERROR_NORMAL))
+				return 0;
+		}
 	}
 	else {
 		if (!infile.open(fname, FileParser::MOD_FILE, FileParser::ERROR_NORMAL))
 			return 0;
 	}
-
-	Utils::logInfo("Map: Loading map '%s'", fname.c_str());
-
-	this->filename = fname;
 
 	while (infile.next()) {
 		if (infile.new_section) {
@@ -249,6 +252,7 @@ int Map::load(const std::string& fname, bool load_procgen_cache) {
 		if (Filesystem::fileExists(procgen_filename)) {
 			return load(fname, Map::LOAD_PROCGEN_CACHE);
 		}
+		Utils::logInfo("Saving map: %s", fname.c_str());
 		map_saver.saveMap(procgen_filename, "");
 
 		// we can't use the spawn position from the player's save file if we're generating a new map
