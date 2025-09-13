@@ -245,7 +245,7 @@ bool EventManager::loadEventComponentString(std::string &key, std::string &val, 
 		e->data[1].Float = Parse::popFirstFloat(val);
 	}
 	else if (key == "intermap") {
-		// @ATTR event.intermap|filename, int, int : Map file, X, Y|Jump to specific map at location specified.
+		// @ATTR event.intermap|filename, int, int, int : Map file, X, Y, Spawn point ID|Jump to specific map. X & Y (optional) can be used to specifiy the spawn position. Alternatively, use position (-1, -1) and an integer ID to specify an event containing a hero_pos_id component to use its location as the spawn point.
 		e->type = EventComponent::INTERMAP;
 
 		e->s = Parse::popFirstString(val);
@@ -256,6 +256,11 @@ bool EventManager::loadEventComponentString(std::string &key, std::string &val, 
 		if (!test_x.empty()) {
 			e->data[0].Int = Parse::toInt(test_x);
 			e->data[1].Int = Parse::popFirstInt(val);
+
+			std::string test_spawn_id = Parse::popFirstString(val);
+			if (!test_spawn_id.empty()) {
+				e->data[3].Int = Parse::toInt(test_spawn_id);
+			}
 		}
 
 		e->data[2].Bool = false; // not a map list
@@ -780,6 +785,12 @@ bool EventManager::loadEventComponentString(std::string &key, std::string &val, 
 		e->type = EventComponent::PROCGEN_LINK;
 
 		e->s = val;
+	}
+	else if (key == "hero_pos_id") {
+		// @ATTR TODO
+		e->type = EventComponent::HERO_POS_ID;
+
+		e->data[0].Int = Parse::popFirstInt(val);
 	}
 	else {
 		return false;
