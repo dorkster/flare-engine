@@ -32,7 +32,7 @@ MapSaver::MapSaver(Map *_map) : map(_map)
 	EVENT_COMPONENT_NAME[EventComponent::MAPMOD] = "mapmod";
 	EVENT_COMPONENT_NAME[EventComponent::SOUNDFX] = "soundfx";
 	EVENT_COMPONENT_NAME[EventComponent::LOOT] = "loot"; // HALF-IMPLEMENTED
-	EVENT_COMPONENT_NAME[EventComponent::LOOT_COUNT] = "loot_count"; // UNIMPLEMENTED
+	EVENT_COMPONENT_NAME[EventComponent::LOOT_COUNT] = "loot_count";
 	EVENT_COMPONENT_NAME[EventComponent::MSG] = "msg";
 	EVENT_COMPONENT_NAME[EventComponent::SHAKYCAM] = "shakycam";
 	EVENT_COMPONENT_NAME[EventComponent::REQUIRES_STATUS] = "requires_status";
@@ -70,7 +70,7 @@ MapSaver::MapSaver(Map *_map) : map(_map)
 	EVENT_COMPONENT_NAME[EventComponent::SHOW_ON_MINIMAP] = "show_on_minimap";
 	EVENT_COMPONENT_NAME[EventComponent::PARALLAX_LAYERS] = "parallax_layers";
 	EVENT_COMPONENT_NAME[EventComponent::RANDOM_STATUS] = "random_status";
-	EVENT_COMPONENT_NAME[EventComponent::PROCGEN_FILENAME] = "procgen_filename";
+	EVENT_COMPONENT_NAME[EventComponent::HERO_POS_ID] = "hero_pos_id";
 
 	dest_file = map->getFilename();
 }
@@ -443,7 +443,7 @@ void MapSaver::writeEventComponents(std::ofstream &map_file, int eventID)
 			if (e.type == EventComponent::PROCGEN_FILENAME || e.type == EventComponent::PROCGEN_LINK) {
 				continue;
 			}
-			else {
+			else if (!EVENT_COMPONENT_NAME[e.type].empty()) {
 				map_file << EVENT_COMPONENT_NAME[e.type] << "=";
 			}
 		}
