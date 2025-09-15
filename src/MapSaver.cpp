@@ -618,6 +618,13 @@ void MapSaver::writeEventComponents(std::ofstream &map_file, int eventID)
 
 			map_file << "," << e.data[1].Bool << std::endl;
 		}
+		// TODO
+	// EVENT_COMPONENT_NAME[EventComponent::SHOW_ON_MINIMAP] = "show_on_minimap";
+	// EVENT_COMPONENT_NAME[EventComponent::PARALLAX_LAYERS] = "parallax_layers";
+	// EVENT_COMPONENT_NAME[EventComponent::RANDOM_STATUS] = "random_status";
+		else if (e.type == EventComponent::HERO_POS_ID) {
+			map_file << e.data[0].Int << std::endl;
+		}
 		else if (e.type == EventComponent::PROCGEN_FILENAME) {
 			map_file << e.s << std::endl;
 		}
