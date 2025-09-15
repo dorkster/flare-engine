@@ -340,6 +340,17 @@ void GameStatePlay::checkTeleport() {
 			if (mapr->force_spawn_pos || (mapr->teleport_destination.x == -1 && mapr->teleport_destination.y == -1)) {
 				pc->stats.pos.x = mapr->hero_pos.x;
 				pc->stats.pos.y = mapr->hero_pos.y;
+
+				if (mapr->teleport_destination_id > 0) {
+					for (size_t i = 0; i < mapr->events.size(); ++i) {
+						EventComponent* ec_hero_pos = mapr->events[i].getComponent(EventComponent::HERO_POS_ID);
+						if (ec_hero_pos && ec_hero_pos->data[0].Int == mapr->teleport_destination_id) {
+							pc->stats.pos.x = static_cast<float>(mapr->events[i].location.x) + 0.5f;
+							pc->stats.pos.y = static_cast<float>(mapr->events[i].location.y) + 0.5f;
+							break;
+						}
+					}
+				}
 				mapr->cam.warpTo(pc->stats.pos);
 			}
 
