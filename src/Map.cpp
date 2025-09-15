@@ -230,33 +230,35 @@ int Map::load(const std::string& fname, bool load_procgen_cache) {
 	infile.close();
 
 	// generate any procedural regions
-	int procgen_regions = 0;
+	std::vector<Event> procgen_regions;
 	for (size_t i = 0; i < events.size(); ++i) {
 		EventComponent *ec_procgen = events[i].getComponent(EventComponent::PROCGEN_FILENAME);
 		if (ec_procgen) {
-			if (procgen_regions == 0) {
-				procGenFillArea(ec_procgen->s, events[i].location);
-			}
-			procgen_regions++;
+			procgen_regions.push_back(events[i]);
 		}
 	}
 
-	if (procgen_regions > 1) {
+	if (procgen_regions.size() > 1) {
 		Utils::logInfo("Map: Warning! Only 1 'procgen_filename' event is supported.");
 	}
 
 	// if a previously generated map exists, load it from disk cache
 	// otherwise, save the generated map to disk
-	if (procgen_regions > 0) {
-		MapSaver map_saver(this);
+	if (!procgen_regions.empty()) {
 		if (Filesystem::fileExists(procgen_filename)) {
 			return load(fname, Map::LOAD_PROCGEN_CACHE);
 		}
-		Utils::logInfo("Saving map: %s", fname.c_str());
-		map_saver.saveMap(procgen_filename, "");
+		else {
+			EventComponent *ec_procgen = procgen_regions[0].getComponent(EventComponent::PROCGEN_FILENAME);
+			procGenFillArea(ec_procgen->s, procgen_regions[0].location);
 
-		// we can't use the spawn position from the player's save file if we're generating a new map
-		force_spawn_pos = true;
+			MapSaver map_saver(this);
+			Utils::logInfo("Saving map: %s", fname.c_str());
+			map_saver.saveMap(procgen_filename, "");
+
+			// we can't use the spawn position from the player's save file if we're generating a new map
+			force_spawn_pos = true;
+		}
 	}
 
 	// load fog-of-war configuration file
@@ -286,7 +288,7 @@ int Map::load(const std::string& fname, bool load_procgen_cache) {
 
 	if (fogofwar) {
 		// load the fog-of-war data from disk cache, unless this map was just procedurally generated
-		if (save_fogofwar && procgen_regions == 0) {
+		if (save_fogofwar && procgen_regions.empty()) {
 			std::string fow_filename = getFOWFilename();
 			if (infile.open(fow_filename, !FileParser::MOD_FILE, FileParser::ERROR_NORMAL)) {
 				while (infile.next()) {
