@@ -136,6 +136,7 @@ public:
 	// teleport handling
 	bool teleportation;
 	FPoint teleport_destination;
+	int teleport_destination_id;
 	std::string teleport_mapname;
 	std::string respawn_map;
 	FPoint respawn_point;
