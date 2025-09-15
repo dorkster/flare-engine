@@ -878,10 +878,12 @@ bool EventManager::executeEventInternal(Event &ev, bool skip_delay) {
 					// the teleport destination will be set to the map's hero_pos once the map is loaded
 					mapr->teleport_destination.x = -1;
 					mapr->teleport_destination.y = -1;
+					mapr->teleport_destination_id = ec->data[3].Int;
 				}
 				else {
 					mapr->teleport_destination.x = static_cast<float>(ec->data[0].Int) + 0.5f;
 					mapr->teleport_destination.y = static_cast<float>(ec->data[1].Int) + 0.5f;
+					mapr->teleport_destination_id = 0;
 				}
 			}
 			else {
