@@ -15,8 +15,9 @@ You should have received a copy of the GNU General Public License along with
 FLARE.  If not, see http://www.gnu.org/licenses/
 */
 
-#include "MapSaver.h"
 #include "EventManager.h"
+#include "LootManager.h"
+#include "MapSaver.h"
 #include "Settings.h"
 #include "SharedResources.h"
 #include "Utils.h"
@@ -443,6 +444,9 @@ void MapSaver::writeEventComponents(std::ofstream &map_file, int eventID)
 			if (e.type == EventComponent::PROCGEN_FILENAME || e.type == EventComponent::PROCGEN_LINK) {
 				continue;
 			}
+			else if (e.type == EventComponent::LOOT && e.data[LootManager::LOOT_EC_TYPE].Int == LootManager::LOOT_EC_TYPE_TABLE_ROW) {
+				continue;
+			}
 			else if (!EVENT_COMPONENT_NAME[e.type].empty()) {
 				map_file << EVENT_COMPONENT_NAME[e.type] << "=";
 			}
@@ -492,18 +496,19 @@ void MapSaver::writeEventComponents(std::ofstream &map_file, int eventID)
 			map_file << std::endl;
 		}
 		else if (e.type == EventComponent::LOOT) {
-			map_file << e.s << ",";
+			if (e.data[LootManager::LOOT_EC_TYPE].Int == LootManager::LOOT_EC_TYPE_TABLE) {
+				map_file << e.s << std::endl;
+			}
+			else if (e.data[LootManager::LOOT_EC_TYPE].Int == LootManager::LOOT_EC_TYPE_SINGLE) {
+				map_file << e.s << ",";
 
-			if (e.data[2].Int == 0)
-				map_file << "fixed";
-			else
-				map_file << e.data[2].Int;
+				if (e.data[LootManager::LOOT_EC_CHANCE].Int == 0)
+					map_file << "fixed";
+				else
+					map_file << e.data[LootManager::LOOT_EC_CHANCE].Int;
 
-			map_file << "," << e.data[3].Int << "," << e.data[4].Int << std::endl;
-
-			// TODO, is this true?
-			// UNIMPLEMENTED
-			// Loot tables not supported
+				map_file << "," << e.data[LootManager::LOOT_EC_QUANTITY_MIN].Int << "," << e.data[LootManager::LOOT_EC_QUANTITY_MAX].Int << std::endl;
+			}
 		}
 		else if (e.type == EventComponent::LOOT_COUNT) {
 			map_file << e.data[0].Int << "," << e.data[1].Int << std::endl;
@@ -618,10 +623,24 @@ void MapSaver::writeEventComponents(std::ofstream &map_file, int eventID)
 
 			map_file << "," << e.data[1].Bool << std::endl;
 		}
-		// TODO
-	// EVENT_COMPONENT_NAME[EventComponent::SHOW_ON_MINIMAP] = "show_on_minimap";
-	// EVENT_COMPONENT_NAME[EventComponent::PARALLAX_LAYERS] = "parallax_layers";
-	// EVENT_COMPONENT_NAME[EventComponent::RANDOM_STATUS] = "random_status";
+		else if (e.type == EventComponent::SHOW_ON_MINIMAP) {
+			map_file << e.data[0].Bool << std::endl;
+		}
+		else if (e.type == EventComponent::PARALLAX_LAYERS) {
+			map_file << e.s << std::endl;
+		}
+		else if (e.type == EventComponent::RANDOM_STATUS) {
+			if (e.data[0].Int == EventComponent::RANDOM_STATUS_MODE_APPEND)
+				map_file << "append," << e.s << std::endl;
+			else if (e.data[0].Int == EventComponent::RANDOM_STATUS_MODE_CLEAR)
+				map_file << "clear" << std::endl;
+			else if (e.data[0].Int == EventComponent::RANDOM_STATUS_MODE_ROLL)
+				map_file << "roll" << std::endl;
+			else if (e.data[0].Int == EventComponent::RANDOM_STATUS_MODE_SET)
+				map_file << "set" << std::endl;
+			else if (e.data[0].Int == EventComponent::RANDOM_STATUS_MODE_UNSET)
+				map_file << "unset" << std::endl;
+		}
 		else if (e.type == EventComponent::HERO_POS_ID) {
 			map_file << e.data[0].Int << std::endl;
 		}
