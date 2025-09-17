@@ -39,15 +39,6 @@ class StatBlock;
 
 class LootManager {
 private:
-	enum {
-		LOOT_EC_POSX = 0,
-		LOOT_EC_POSY = 1,
-		LOOT_EC_CHANCE = 2,
-		LOOT_EC_QUANTITY_MIN = 3,
-		LOOT_EC_QUANTITY_MAX = 4,
-		LOOT_EC_MAX_DROPS = 5,
-	};
-
 	// functions
 	void loadGraphics();
 	void checkEnemiesForLoot();
@@ -76,6 +67,22 @@ private:
 
 public:
 	static const bool DROPPED_BY_HERO = true;
+
+	enum {
+		LOOT_EC_POSX = 0,
+		LOOT_EC_POSY = 1,
+		LOOT_EC_CHANCE = 2,
+		LOOT_EC_QUANTITY_MIN = 3,
+		LOOT_EC_QUANTITY_MAX = 4,
+		LOOT_EC_MAX_DROPS = 5,
+		LOOT_EC_TYPE = 6,
+	};
+
+	enum {
+		LOOT_EC_TYPE_SINGLE = 0,
+		LOOT_EC_TYPE_TABLE,
+		LOOT_EC_TYPE_TABLE_ROW,
+	};
 
 	LootManager();
 	LootManager(const LootManager &copy); // not implemented
