@@ -56,6 +56,8 @@ Map::Map()
 	, save_fogofwar(eset->misc.save_fogofwar)
 	, force_spawn_pos(false)
 	, procgen_type(Chunk::TYPE_EMPTY)
+	, procgen_reset_status()
+	, procgen_reset_status_id(0)
 {
 }
 
@@ -168,7 +170,7 @@ int Map::load(const std::string& fname, bool load_procgen_cache) {
 	// if a previously generated map exists, load it from disk cache
 	// otherwise, save the generated map to disk
 	if (!procgen_regions.empty()) {
-		if (Filesystem::fileExists(procgen_filename)) {
+		if (!camp->checkStatus(procgen_reset_status_id) && Filesystem::fileExists(procgen_filename)) {
 			return load(fname, Map::LOAD_PROCGEN_CACHE);
 		}
 		else {
@@ -338,6 +340,11 @@ void Map::loadHeader(FileParser &infile) {
 		else {
 			infile.error("Map: '%s' is not a valid procedural generation chunk type.", infile.val.c_str());
 		}
+	}
+	else if (infile.key == "procgen_reset_status") {
+		// @ATTR procgen_reset_status|string|If the map contains procgen region(s), it will be regenerated if this campaign status is set.
+		procgen_reset_status = infile.val;
+		procgen_reset_status_id = camp->registerStatus(procgen_reset_status);
 	}
 	else if (infile.key == "orientation") {
 		// this is only used by Tiled when importing Flare maps
