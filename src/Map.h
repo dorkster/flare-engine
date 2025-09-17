@@ -270,6 +270,8 @@ public:
 	bool save_fogofwar;
 	bool force_spawn_pos;
 	size_t procgen_type;
+	std::string procgen_reset_status;
+	StatusID procgen_reset_status_id;
 
 };
 
