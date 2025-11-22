@@ -1306,7 +1306,8 @@ void Map::procGenFillArea(const std::string& config_filename, const Rect& area) 
 						ec->data[1].Int += static_cast<int>(y_offset);
 					}
 					else if (ec->type == EventComponent::SOUNDFX) {
-						if (ec->data[0].Int != -1 && ec->data[1].Int != -1) {
+						// make sure we handle sounds that aren't positional
+						if (!(ec->data[0].Int == -1 && ec->data[1].Int == -1) && !(ec->data[0].Int == 0 && ec->data[1].Int == 0)) {
 							ec->data[0].Int += static_cast<int>(x_offset);
 							ec->data[1].Int += static_cast<int>(y_offset);
 						}
