@@ -121,6 +121,7 @@ void SpawnLevel::applyToStatBlock(StatBlock *src_stats, StatBlock *ratio_stats) 
 Map::Map()
 	: filename("")
 	, procgen_doors_max(0)
+	, procgen_door_spacing_min(0)
 	, procgen_branches_per_door_level_max(0)
 	, layers()
 	, events()
@@ -942,6 +943,9 @@ int Map::procGenCreatePath(int path_type, int desired_length, int* _door_count, 
     int door_chance = 0;
     int door_dist = 0;
     int door_min_dist = procgen_doors_max > 0 ? std::max(2, desired_length / procgen_doors_max) : 0;
+	if (procgen_door_spacing_min > 0) {
+		door_min_dist = std::max(2, procgen_door_spacing_min);
+	}
     int path_length = 0;
     int branch_chance = 0;
     int branch_count = 0;
@@ -1098,6 +1102,9 @@ void Map::procGenFillArea(const std::string& config_filename, const Rect& area) 
 				else if (infile.key == "branches_per_door_level_max") {
 					procgen_branches_per_door_level_max = Parse::toInt(infile.val);
 				}
+				else if (infile.key == "door_spacing_min") {
+					procgen_door_spacing_min = Parse::toInt(infile.val);
+				}
 			}
 			else if (infile.section == "chunks") {
 				if (infile.key == "filename") {
@@ -1176,7 +1183,7 @@ void Map::procGenFillArea(const std::string& config_filename, const Rect& area) 
     int gen_attempts = 0;
     int door_count = 0;
 
-    while ((main_path_length < main_path_length_min || main_path_length > main_path_length_max) && gen_attempts < main_path_attempts_max) {
+    while ((main_path_length < main_path_length_min || main_path_length > main_path_length_max || (door_count == 0 && procgen_doors_max > 0)) && gen_attempts < main_path_attempts_max) {
         main_path_length = procGenCreatePath(PATH_MAIN, main_path_length, &door_count, 0, 0);
 
         gen_attempts++;

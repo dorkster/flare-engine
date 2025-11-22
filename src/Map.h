@@ -220,6 +220,7 @@ protected:
 	std::vector<Point> procgen_branch_roots;
 
 	int procgen_doors_max;
+	int procgen_door_spacing_min;
 	int procgen_branches_per_door_level_max;
 
 public:
