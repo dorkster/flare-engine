@@ -1406,6 +1406,9 @@ void Map::procGenFillArea(const std::string& config_filename, const Rect& area) 
 }
 
 void Map::copyTileLayer(Map* src, size_t layer_index, size_t src_x, size_t src_y, size_t src_w, size_t src_h, size_t x_offset, size_t y_offset) {
+	if (layer_index >= layers.size() || layer_index >= src->layers.size())
+		return;
+
 	if (src_w == 0)
 		src_w = src->layers[layer_index].size();
 	if (src_h == 0)
