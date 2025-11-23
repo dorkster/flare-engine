@@ -786,6 +786,26 @@ bool EventManager::loadEventComponentString(std::string &key, std::string &val, 
 
 		e->s = val;
 	}
+	else if (key == "requires_door_level") {
+		// @ATTR TODO
+		e->type = EventComponent::PROCGEN_REQUIRES_DOOR_LEVEL;
+
+		e->data[0].Int = Parse::popFirstInt(val);
+
+		// add repeating door levels
+		if (evnt) {
+			std::string repeat_val = Parse::popFirstString(val);
+			while (repeat_val != "") {
+				evnt->components.push_back(EventComponent());
+				e = &evnt->components.back();
+				e->type = EventComponent::PROCGEN_REQUIRES_DOOR_LEVEL;
+				e->data[0].Int = Parse::toInt(repeat_val);
+				e->s = repeat_val;
+
+				repeat_val = Parse::popFirstString(val);
+			}
+		}
+	}
 	else if (key == "hero_pos_id") {
 		// @ATTR TODO
 		e->type = EventComponent::HERO_POS_ID;

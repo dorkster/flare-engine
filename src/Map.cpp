@@ -1290,6 +1290,9 @@ void Map::procGenFillArea(const std::string& config_filename, const Rect& area) 
 				event.reachable_from.x += static_cast<int>(x_offset);
 				event.reachable_from.y += static_cast<int>(y_offset);
 
+				bool check_required_door_level = false;
+				bool event_matched_door_level = false;
+
 				for (size_t ec_index = 0; ec_index < event.components.size(); ++ec_index) {
 					EventComponent* ec = &event.components[ec_index];
 
@@ -1316,8 +1319,15 @@ void Map::procGenFillArea(const std::string& config_filename, const Rect& area) 
 						ec->data[0].Int += static_cast<int>(x_offset);
 						ec->data[1].Int += static_cast<int>(y_offset);
 					}
+					else if (ec->type == EventComponent::PROCGEN_REQUIRES_DOOR_LEVEL) {
+						check_required_door_level = true;
+						if (chunk->door_level == ec->data[0].Int)
+							event_matched_door_level = true;
+					}
 				}
-				events.push_back(event);
+
+				if (!check_required_door_level || event_matched_door_level)
+					events.push_back(event);
 			}
 
 			for (size_t egroup_index = 0; egroup_index < chunk_map->enemy_groups.size(); ++egroup_index) {
