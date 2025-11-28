@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License along with
 FLARE.  If not, see http://www.gnu.org/licenses/
 */
 
+#include "EngineSettings.h"
 #include "EventManager.h"
 #include "LootManager.h"
 #include "MapSaver.h"
@@ -272,6 +273,38 @@ void MapSaver::writeEnemies(std::ofstream& map_file)
 			else if (ec.type == EventComponent::REQUIRES_NOT_CLASS) {
 				map_file << "requires_not_class=" << ec.s << std::endl;
 			}
+		}
+
+		for (size_t j = 0; j < group.invincible_requirements.size(); ++j)
+		{
+			EventComponent& ec = group.invincible_requirements[j];
+
+			if (ec.type == EventComponent::REQUIRES_STATUS) {
+				map_file << "requires_status=" << ec.s << std::endl;
+			}
+			else if (ec.type == EventComponent::REQUIRES_NOT_STATUS) {
+				map_file << "requires_not_status=" << ec.s << std::endl;
+			}
+			// invincible_requirements only accepts status
+		}
+
+		if (group.spawn_level.count > 0) {
+			map_file << "spawn_level=";
+
+			if (group.spawn_level.mode == SpawnLevel::MODE_DEFAULT) {
+				map_file << "default";
+			}
+			else if (group.spawn_level.mode == SpawnLevel::MODE_FIXED) {
+				map_file << "fixed," << static_cast<int>(group.spawn_level.count);
+			}
+			else if (group.spawn_level.mode == SpawnLevel::MODE_LEVEL) {
+				map_file << "level," << static_cast<int>(group.spawn_level.count) << "," << group.spawn_level.ratio;
+			}
+			else if (group.spawn_level.mode == SpawnLevel::MODE_STAT && group.spawn_level.stat < eset->primary_stats.list.size()) {
+				map_file << "level," << static_cast<int>(group.spawn_level.count) << "," << group.spawn_level.ratio << "," << eset->primary_stats.list[group.spawn_level.stat].id;
+			}
+
+			map_file << std::endl;
 		}
 
 		map_file << std::endl;
