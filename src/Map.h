@@ -215,6 +215,7 @@ protected:
 	void procGenFillArea(const std::string& config_filename, const Rect& area);
 
 	void copyTileLayer(Map* src, size_t layer_index, size_t src_x, size_t src_y, size_t src_w, size_t src_h, size_t x_offset, size_t y_offset);
+	void copyMapObjects(Map* src, Chunk* chunk, size_t src_x, size_t src_y, size_t src_w, size_t src_h, size_t x_offset, size_t y_offset);
 
 	std::vector< std::vector<Chunk> > procgen_chunks;
 	std::vector<Point> procgen_branch_roots;

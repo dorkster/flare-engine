@@ -1278,84 +1278,24 @@ void Map::procGenFillArea(const std::string& config_filename, const Rect& area) 
 				}
 			}
 
-			// copy and apply x/y offset to events
-			for (size_t event_index = 0; event_index < chunk_map->events.size(); ++event_index) {
-				Event event = chunk_map->events[event_index];
-				event.location.x += static_cast<int>(x_offset);
-				event.location.y += static_cast<int>(y_offset);
-				event.hotspot.x += static_cast<int>(x_offset);
-				event.hotspot.y += static_cast<int>(y_offset);
-				event.center.x += static_cast<float>(x_offset);
-				event.center.y += static_cast<float>(y_offset);
-				event.reachable_from.x += static_cast<int>(x_offset);
-				event.reachable_from.y += static_cast<int>(y_offset);
+			copyMapObjects(chunk_map, chunk, 0, 0, 0, 0, x_offset, y_offset);
 
-				bool check_required_door_level = false;
-				bool event_matched_door_level = false;
-
-				for (size_t ec_index = 0; ec_index < event.components.size(); ++ec_index) {
-					EventComponent* ec = &event.components[ec_index];
-
-					if (ec->type == EventComponent::POWER_PATH) {
-						ec->data[0].Int += static_cast<int>(x_offset);
-						ec->data[1].Int += static_cast<int>(y_offset);
-					}
-					else if (ec->type == EventComponent::INTRAMAP) {
-						ec->data[0].Int += static_cast<int>(x_offset);
-						ec->data[1].Int += static_cast<int>(y_offset);
-					}
-					else if (ec->type == EventComponent::MAPMOD) {
-						ec->data[0].Int += static_cast<int>(x_offset);
-						ec->data[1].Int += static_cast<int>(y_offset);
-					}
-					else if (ec->type == EventComponent::SOUNDFX) {
-						// make sure we handle sounds that aren't positional
-						if (!(ec->data[0].Int == -1 && ec->data[1].Int == -1) && !(ec->data[0].Int == 0 && ec->data[1].Int == 0)) {
-							ec->data[0].Int += static_cast<int>(x_offset);
-							ec->data[1].Int += static_cast<int>(y_offset);
-						}
-					}
-					else if (ec->type == EventComponent::SPAWN) {
-						ec->data[0].Int += static_cast<int>(x_offset);
-						ec->data[1].Int += static_cast<int>(y_offset);
-					}
-					else if (ec->type == EventComponent::PROCGEN_REQUIRES_DOOR_LEVEL) {
-						check_required_door_level = true;
-						if (chunk->door_level == ec->data[0].Int)
-							event_matched_door_level = true;
-					}
-				}
-
-				if (!check_required_door_level || event_matched_door_level)
-					events.push_back(event);
+			if (chunk->links[Chunk::LINK_NORTH]) {
+				Rect *r = &link_rects[Chunk::LINK_NORTH];
+				copyMapObjects(chunk_map_links, chunk, r->x, r->y, r->x + r->w, r->y + r->h, x_offset, y_offset);
 			}
-
-			for (size_t egroup_index = 0; egroup_index < chunk_map->enemy_groups.size(); ++egroup_index) {
-				Map_Group enemy_group = chunk_map->enemy_groups[egroup_index];
-				enemy_group.pos.x += static_cast<int>(x_offset);
-				enemy_group.pos.y += static_cast<int>(y_offset);
-
-				for (size_t waypoint_index = 0; waypoint_index < enemy_group.waypoints.size(); ++waypoint_index) {
-					enemy_group.waypoints[waypoint_index].x += static_cast<float>(x_offset);
-					enemy_group.waypoints[waypoint_index].y += static_cast<float>(y_offset);
-				}
-
-				enemy_groups.push_back(enemy_group);
+			if (chunk->links[Chunk::LINK_SOUTH]) {
+				Rect *r = &link_rects[Chunk::LINK_SOUTH];
+				copyMapObjects(chunk_map_links, chunk, r->x, r->y, r->x + r->w, r->y + r->h, x_offset, y_offset);
 			}
-
-			for (size_t npc_index = 0; npc_index < chunk_map->map_npcs.size(); ++npc_index) {
-				Map_NPC npc = chunk_map->map_npcs[npc_index];
-				npc.pos.x += static_cast<float>(x_offset);
-				npc.pos.y += static_cast<float>(y_offset);
-
-				for (size_t waypoint_index = 0; waypoint_index < npc.waypoints.size(); ++waypoint_index) {
-					npc.waypoints[waypoint_index].x += static_cast<float>(x_offset);
-					npc.waypoints[waypoint_index].y += static_cast<float>(y_offset);
-				}
-
-				map_npcs.push_back(npc);
+			if (chunk->links[Chunk::LINK_WEST]) {
+				Rect *r = &link_rects[Chunk::LINK_WEST];
+				copyMapObjects(chunk_map_links, chunk, r->x, r->y, r->x + r->w, r->y + r->h, x_offset, y_offset);
 			}
-
+			if (chunk->links[Chunk::LINK_EAST]) {
+				Rect *r = &link_rects[Chunk::LINK_EAST];
+				copyMapObjects(chunk_map_links, chunk, r->x, r->y, r->x + r->w, r->y + r->h, x_offset, y_offset);
+			}
 		}
 	}
 
@@ -1436,6 +1376,109 @@ void Map::copyTileLayer(Map* src, size_t layer_index, size_t src_x, size_t src_y
 		}
 	}
 }
+
+void Map::copyMapObjects(Map* src, Chunk* chunk, size_t src_x, size_t src_y, size_t src_w, size_t src_h, size_t x_offset, size_t y_offset) {
+	if (src_w == 0)
+		src_w = src->w;
+	if (src_h == 0)
+		src_h = src->h;
+
+	// copy and apply x/y offset to events
+	for (size_t event_index = 0; event_index < src->events.size(); ++event_index) {
+		Event event = src->events[event_index];
+
+		if (static_cast<size_t>(event.location.x) < src_x || static_cast<size_t>(event.location.y) < src_y || static_cast<size_t>(event.location.x) > src_x + src_w || static_cast<size_t>(event.location.y) > src_y + src_h)
+			continue;
+
+		event.location.x += static_cast<int>(x_offset);
+		event.location.y += static_cast<int>(y_offset);
+		event.hotspot.x += static_cast<int>(x_offset);
+		event.hotspot.y += static_cast<int>(y_offset);
+		event.center.x += static_cast<float>(x_offset);
+		event.center.y += static_cast<float>(y_offset);
+		event.reachable_from.x += static_cast<int>(x_offset);
+		event.reachable_from.y += static_cast<int>(y_offset);
+
+		bool check_required_door_level = false;
+		bool event_matched_door_level = false;
+		bool event_is_procgen = false;
+
+		for (size_t ec_index = 0; ec_index < event.components.size(); ++ec_index) {
+			EventComponent* ec = &event.components[ec_index];
+
+			if (ec->type == EventComponent::PROCGEN_LINK || ec->type == EventComponent::PROCGEN_FILENAME) {
+				event_is_procgen = true;
+				break;
+			}
+			else if (ec->type == EventComponent::POWER_PATH) {
+				ec->data[0].Int += static_cast<int>(x_offset);
+				ec->data[1].Int += static_cast<int>(y_offset);
+			}
+			else if (ec->type == EventComponent::INTRAMAP) {
+				ec->data[0].Int += static_cast<int>(x_offset);
+				ec->data[1].Int += static_cast<int>(y_offset);
+			}
+			else if (ec->type == EventComponent::MAPMOD) {
+				ec->data[0].Int += static_cast<int>(x_offset);
+				ec->data[1].Int += static_cast<int>(y_offset);
+			}
+			else if (ec->type == EventComponent::SOUNDFX) {
+				// make sure we handle sounds that aren't positional
+				if (!(ec->data[0].Int == -1 && ec->data[1].Int == -1) && !(ec->data[0].Int == 0 && ec->data[1].Int == 0)) {
+					ec->data[0].Int += static_cast<int>(x_offset);
+					ec->data[1].Int += static_cast<int>(y_offset);
+				}
+			}
+			else if (ec->type == EventComponent::SPAWN) {
+				ec->data[0].Int += static_cast<int>(x_offset);
+				ec->data[1].Int += static_cast<int>(y_offset);
+			}
+			else if (ec->type == EventComponent::PROCGEN_REQUIRES_DOOR_LEVEL) {
+				check_required_door_level = true;
+				if (chunk->door_level == ec->data[0].Int)
+					event_matched_door_level = true;
+			}
+		}
+
+		if (!event_is_procgen && (!check_required_door_level || event_matched_door_level))
+			events.push_back(event);
+	}
+
+	for (size_t egroup_index = 0; egroup_index < src->enemy_groups.size(); ++egroup_index) {
+		Map_Group enemy_group = src->enemy_groups[egroup_index];
+
+		if (static_cast<size_t>(enemy_group.pos.x) < src_x || static_cast<size_t>(enemy_group.pos.y) < src_y || static_cast<size_t>(enemy_group.pos.x) > src_x + src_w || static_cast<size_t>(enemy_group.pos.y) > src_y + src_h)
+			continue;
+
+		enemy_group.pos.x += static_cast<int>(x_offset);
+		enemy_group.pos.y += static_cast<int>(y_offset);
+
+		for (size_t waypoint_index = 0; waypoint_index < enemy_group.waypoints.size(); ++waypoint_index) {
+			enemy_group.waypoints[waypoint_index].x += static_cast<float>(x_offset);
+			enemy_group.waypoints[waypoint_index].y += static_cast<float>(y_offset);
+		}
+
+		enemy_groups.push_back(enemy_group);
+	}
+
+	for (size_t npc_index = 0; npc_index < src->map_npcs.size(); ++npc_index) {
+		Map_NPC npc = src->map_npcs[npc_index];
+
+		if (static_cast<size_t>(npc.pos.x) < src_x || static_cast<size_t>(npc.pos.y) < src_y || static_cast<size_t>(npc.pos.x) > src_x + src_w || static_cast<size_t>(npc.pos.y) > src_y + src_h)
+			continue;
+
+		npc.pos.x += static_cast<float>(x_offset);
+		npc.pos.y += static_cast<float>(y_offset);
+
+		for (size_t waypoint_index = 0; waypoint_index < npc.waypoints.size(); ++waypoint_index) {
+			npc.waypoints[waypoint_index].x += static_cast<float>(x_offset);
+			npc.waypoints[waypoint_index].y += static_cast<float>(y_offset);
+		}
+
+		map_npcs.push_back(npc);
+	}
+}
+
 
 std::string Map::getProcgenFilename() {
 	std::stringstream ss;
