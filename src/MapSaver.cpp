@@ -509,8 +509,12 @@ void MapSaver::writeEventComponents(std::ofstream &map_file, int eventID)
 		else if (e.type == EventComponent::INTERMAP) {
 			map_file << e.s;
 
-			if (e.data[0].Int != -1 || e.data[1].Int != -1)
+			if (e.data[0].Int != -1 || e.data[1].Int != -1 || e.data[3].Int != 0) {
 				map_file << "," << e.data[0].Int << "," << e.data[1].Int;
+				if (e.data[3].Int != 0) {
+					map_file << "," << e.data[3].Int;
+				}
+			}
 
 			map_file << std::endl;
 		}
@@ -614,7 +618,7 @@ void MapSaver::writeEventComponents(std::ofstream &map_file, int eventID)
 			map_file << e.s << std::endl;
 		}
 		else if (e.type == EventComponent::POWER) {
-			map_file << e.data[0].Int << std::endl;
+			map_file << e.id << std::endl;
 		}
 		else if (e.type == EventComponent::SPAWN) {
 			map_file << e.s << "," << e.data[0].Int << "," << e.data[1].Int << std::endl;
