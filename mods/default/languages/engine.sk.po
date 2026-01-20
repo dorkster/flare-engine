@@ -6,6 +6,7 @@
 # Translators:
 # MiroslavR <miroslavr256@gmail.com>, 2019
 # Justin Jacobs <jajdorkster@gmail.com>, 2022
+# Eliška Žillová, 2026
 # 
 #, fuzzy
 msgid ""
@@ -14,7 +15,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-07-18 12:00-0400\n"
 "PO-Revision-Date: 2018-03-28 19:16+0000\n"
-"Last-Translator: Justin Jacobs <jajdorkster@gmail.com>, 2022\n"
+"Last-Translator: Eliška Žillová, 2026\n"
 "Language-Team: Slovak (https://app.transifex.com/flareorg/teams/84925/sk/)\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -41,7 +42,7 @@ msgstr "Cez ponuku Sily si môžete odomknúť jednu alebo viacero schopností."
 
 #: ../../../src/Avatar.cpp:845
 msgid "You are defeated."
-msgstr ""
+msgstr "Ste porazený."
 
 #: ../../../src/Avatar.cpp:1030
 msgid "Transformation expired. You have been moved back to a safe place."
@@ -50,17 +51,17 @@ msgstr "Čas premeny vypršal. Presunuli ste sa naspäť na bezpečné miesto."
 #: ../../../src/CampaignManager.cpp:154
 #, c-format
 msgid "%d %s removed."
-msgstr ""
+msgstr "%d %s odstránené."
 
 #: ../../../src/CampaignManager.cpp:173
 #, c-format
 msgid "%s x%d removed."
-msgstr ""
+msgstr "%s x%d odstránené."
 
 #: ../../../src/CampaignManager.cpp:175
 #, c-format
 msgid "%s removed."
-msgstr ""
+msgstr "%s odstránené."
 
 #: ../../../src/CampaignManager.cpp:189
 #, c-format
@@ -179,11 +180,11 @@ msgstr "Zmazať túto pozíciu?"
 
 #: ../../../src/GameStateLoad.cpp:97 ../../../src/MenuConfig.cpp:260
 msgid "No"
-msgstr ""
+msgstr "Nie"
 
 #: ../../../src/GameStateLoad.cpp:98 ../../../src/MenuConfig.cpp:261
 msgid "Yes"
-msgstr ""
+msgstr "Áno"
 
 #: ../../../src/GameStateLoad.cpp:101
 msgid "Exit to Title"
@@ -203,7 +204,7 @@ msgstr "Zmazať pozíciu"
 
 #: ../../../src/GameStateLoad.cpp:693 ../../../src/GameStateLoad.cpp:714
 msgid "Enable a story mod to continue"
-msgstr ""
+msgstr "Pre pokračovanie zapnite story mod"
 
 #: ../../../src/GameStateLoad.cpp:709
 msgid "Load Game"
@@ -288,7 +289,7 @@ msgstr "Modifikácie"
 #: ../../../src/GameSwitcher.cpp:224
 #, c-format
 msgid "%s FPS"
-msgstr ""
+msgstr "%s FPS"
 
 #: ../../../src/ItemManager.cpp:681
 msgid "Unknown Item"
@@ -297,12 +298,12 @@ msgstr "Neznámy predmet"
 #: ../../../src/ItemManager.cpp:973 ../../../src/MenuPowers.cpp:1108
 #, c-format
 msgid "%s%% Speed"
-msgstr ""
+msgstr "%s%% Rýchlosť"
 
 #: ../../../src/ItemManager.cpp:977 ../../../src/MenuPowers.cpp:1111
 #, c-format
 msgid "%s%% Attack Speed"
-msgstr ""
+msgstr "%s%% Rýchlosť útoku"
 
 #: ../../../src/ItemManager.cpp:1014
 #, c-format
@@ -333,7 +334,7 @@ msgstr "Vyžaduje úroveň %d"
 #: ../../../src/MenuPowers.cpp:1298
 #, c-format
 msgid "Requires %s %d"
-msgstr ""
+msgstr "Vyžaduje %s %d"
 
 #: ../../../src/ItemManager.cpp:1191
 #, c-format
@@ -366,7 +367,7 @@ msgstr "Súprava:"
 
 #: ../../../src/ItemManager.cpp:1274 ../../../src/MenuPowers.cpp:1356
 msgid "Tap icon again for more options"
-msgstr ""
+msgstr "Pre ďalšie možnosti znovu rozkliknite ikonu"
 
 #: ../../../src/ItemManager.cpp:1306
 #, c-format
@@ -381,7 +382,7 @@ msgstr "Použijete stlačením [%s]"
 #: ../../../src/ItemManager.cpp:1313 ../../../src/MenuPowers.cpp:1390
 #, c-format
 msgid "Press [%s] for more options"
-msgstr ""
+msgstr "Pre viac možností stlačte [%s]"
 
 #: ../../../src/LootManager.cpp:107 ../../../src/LootManager.cpp:109
 #: ../../../src/LootManager.cpp:111 ../../../src/MenuConfig.cpp:487
@@ -668,11 +669,11 @@ msgstr ""
 #: ../../../src/MenuConfig.cpp:383
 msgid ""
 "When enabled, eligible loot will be picked up automatically when nearby."
-msgstr ""
+msgstr "Použitím budú získané predmety na blízku zdvihnuté automaticky."
 
 #: ../../../src/MenuConfig.cpp:385
 msgid "Enabled"
-msgstr ""
+msgstr "Aktivované"
 
 #: ../../../src/MenuConfig.cpp:386
 msgid "Only currency"
@@ -680,7 +681,7 @@ msgstr ""
 
 #: ../../../src/MenuConfig.cpp:403
 msgid "The maximum frame rate that the game will be allowed to run at."
-msgstr ""
+msgstr "Maximálne FPS, na ktorých môže byť hra spustená."
 
 #: ../../../src/MenuConfig.cpp:407
 msgid ""
@@ -704,7 +705,7 @@ msgstr "Zvuk"
 
 #: ../../../src/MenuConfig.cpp:436
 msgid "Game"
-msgstr ""
+msgstr "Hra"
 
 #: ../../../src/MenuConfig.cpp:437
 msgid "Interface"
@@ -760,7 +761,7 @@ msgstr ""
 
 #: ../../../src/MenuConfig.cpp:470
 msgid "Frame Limit"
-msgstr ""
+msgstr "FPS limit"
 
 #: ../../../src/MenuConfig.cpp:472
 msgid "Sound Volume"
@@ -780,7 +781,7 @@ msgstr "Automaticky sa vystrojiť predmetmi"
 
 #: ../../../src/MenuConfig.cpp:477
 msgid "Automatically pick up loot"
-msgstr ""
+msgstr "Automaticky pozbierať predmety"
 
 #: ../../../src/MenuConfig.cpp:478
 msgid "Low health notification"
@@ -800,7 +801,7 @@ msgstr "Zobrazovať FPS"
 
 #: ../../../src/MenuConfig.cpp:483
 msgid "Use system mouse cursor"
-msgstr ""
+msgstr "Použiť systémový kurzor myši"
 
 #: ../../../src/MenuConfig.cpp:484
 msgid "Colorblind Mode"
@@ -1345,11 +1346,11 @@ msgstr "Tento predmet nemožno položiť na zem."
 
 #: ../../../src/MenuManager.cpp:1781
 msgid "Equipped"
-msgstr ""
+msgstr "Používane"
 
 #: ../../../src/MenuManager.cpp:1829 ../../../src/MenuManager.cpp:1880
 msgid "Use"
-msgstr ""
+msgstr "Použiť"
 
 #: ../../../src/MenuManager.cpp:1833 ../../../src/MenuManager.cpp:1876
 #: ../../../src/MenuManager.cpp:1907
@@ -1358,27 +1359,27 @@ msgstr ""
 
 #: ../../../src/MenuManager.cpp:1849 ../../../src/MenuManager.cpp:1884
 msgid "Equip"
-msgstr ""
+msgstr "Použiť"
 
 #: ../../../src/MenuManager.cpp:1853
 msgid "Upgrade"
-msgstr ""
+msgstr "Vylepšiť"
 
 #: ../../../src/MenuManager.cpp:1868 ../../../src/MenuManager.cpp:1892
 msgid "Sell"
-msgstr ""
+msgstr "Predať"
 
 #: ../../../src/MenuManager.cpp:1872 ../../../src/MenuManager.cpp:1910
 msgid "Transfer"
-msgstr ""
+msgstr "Previesť"
 
 #: ../../../src/MenuManager.cpp:1888
 msgid "Drop"
-msgstr ""
+msgstr "Vyhodiť"
 
 #: ../../../src/MenuManager.cpp:1924
 msgid "Buy"
-msgstr ""
+msgstr "Kúpiť"
 
 #: ../../../src/MenuMovementType.cpp:87
 msgid "Select a Movement Type"
@@ -1386,15 +1387,15 @@ msgstr ""
 
 #: ../../../src/MenuMovementType.cpp:89
 msgid "Can be changed later in the Configuration menu."
-msgstr ""
+msgstr "Neskôr sa dá zmeniť v Konfiguračnom menu."
 
 #: ../../../src/MenuMovementType.cpp:92 ../../../src/MenuMovementType.cpp:122
 msgid "Keyboard"
-msgstr ""
+msgstr "Klávesnica"
 
 #: ../../../src/MenuMovementType.cpp:93 ../../../src/MenuMovementType.cpp:128
 msgid "Mouse"
-msgstr ""
+msgstr "Myš"
 
 #: ../../../src/MenuMovementType.cpp:123 ../../../src/MenuMovementType.cpp:132
 #: ../../../src/SDLInputState.cpp:702 ../../../src/SDLInputState.cpp:732
@@ -1422,7 +1423,7 @@ msgstr "Doprava"
 
 #: ../../../src/MenuMovementType.cpp:129
 msgid "Button"
-msgstr ""
+msgstr "Tlačidlo"
 
 #: ../../../src/MenuNumPicker.cpp:59
 msgid "Enter amount:"
@@ -1435,7 +1436,7 @@ msgstr "Pasívna"
 #: ../../../src/MenuPowers.cpp:959
 #, c-format
 msgid "Costs %s MP"
-msgstr "Spotrebuje %d MP"
+msgstr "Spotrebuje %s MP"
 
 #: ../../../src/MenuPowers.cpp:963
 #, c-format
@@ -1444,7 +1445,7 @@ msgstr "Spotrebuje %s HP"
 
 #: ../../../src/MenuPowers.cpp:973
 msgid "Cooldown:"
-msgstr ""
+msgstr "Čas obnovenia:"
 
 #: ../../../src/MenuPowers.cpp:1087 ../../../src/MenuPowers.cpp:1090
 msgid "Damage per second"

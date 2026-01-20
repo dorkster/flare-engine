@@ -66,7 +66,7 @@ Translations
 (pt) Portuguese by Rui
 (pt_BR) Brazilian Portuguese by Vicente Monteiro, Rafael Fontenelle, Thiago Guaryuu
 (ru) Russian by Sergey Basalaev, Evgen Pavlov, Ademaro, Andrey Kapitonov, David Bell, and berry
-(sk) Slovak by Miro Jánošík, MiroslavR
+(sk) Slovak by Miro Jánošík, MiroslavR, Eliška Žillová
 (sv) Swedish by Andreas Berheim Brudin, Kevin Setterborn
 (th_TH) Thai (Thailand) by Pattaraporn Tripiyaratana
 (uk) Ukrainian by Igor Paliychuk, Denis Lysenko, Микола Франчук, Sergiy Borodych
