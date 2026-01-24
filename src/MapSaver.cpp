@@ -288,20 +288,20 @@ void MapSaver::writeEnemies(std::ofstream& map_file)
 			// invincible_requirements only accepts status
 		}
 
-		if (group.spawn_level.count > 0) {
+		if (group.spawn_level.ratio > 0) {
 			map_file << "spawn_level=";
 
 			if (group.spawn_level.mode == SpawnLevel::MODE_DEFAULT) {
 				map_file << "default";
 			}
 			else if (group.spawn_level.mode == SpawnLevel::MODE_FIXED) {
-				map_file << "fixed," << static_cast<int>(group.spawn_level.count);
+				map_file << "fixed," << static_cast<int>(group.spawn_level.ratio);
 			}
 			else if (group.spawn_level.mode == SpawnLevel::MODE_LEVEL) {
-				map_file << "level," << static_cast<int>(group.spawn_level.count) << "," << group.spawn_level.ratio;
+				map_file << "source_level," << group.spawn_level.ratio;
 			}
 			else if (group.spawn_level.mode == SpawnLevel::MODE_STAT && group.spawn_level.stat < eset->primary_stats.list.size()) {
-				map_file << "level," << static_cast<int>(group.spawn_level.count) << "," << group.spawn_level.ratio << "," << eset->primary_stats.list[group.spawn_level.stat].id;
+				map_file << "source_stat," << group.spawn_level.ratio << "," << eset->primary_stats.list[group.spawn_level.stat].id;
 			}
 
 			map_file << std::endl;
