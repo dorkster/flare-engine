@@ -38,6 +38,83 @@ FLARE.  If not, see http://www.gnu.org/licenses/
 #include "Utils.h"
 #include "UtilsParsing.h"
 
+void SpawnLevel::parse(FileParser &infile) {
+	std::string next = Parse::popFirstString(infile.val);
+
+	if (next == "default") mode = MODE_DEFAULT;
+	else if (next == "fixed") mode = MODE_FIXED;
+	else if (next == "source_stat") mode = MODE_STAT;
+	else if (next == "source_level") mode = MODE_LEVEL;
+	else if (next == "stat") {
+		mode = MODE_STAT;
+		is_legacy = true;
+		infile.error("SpawnLevel: 'stat' mode is deprecated. Use 'source_stat' instead.");
+	}
+	else if (next == "level") {
+		mode = MODE_LEVEL;
+		is_legacy = true;
+		infile.error("SpawnLevel: 'level' mode is deprecated. Use 'source_level' instead.");
+	}
+	else infile.error("SpawnLevel: Unknown spawn level mode '%s'", next.c_str());
+
+	if (mode != MODE_DEFAULT) {
+		ratio = Parse::popFirstFloat(infile.val);
+
+		if (mode != MODE_FIXED) {
+			next = Parse::popFirstString(infile.val);
+			float nextf = Parse::toFloat(next);
+
+			if (is_legacy) {
+				// legacy format detected!
+				if (nextf != 0) {
+					ratio = ratio / nextf;
+				}
+
+				if (mode == MODE_STAT) {
+					next = Parse::popFirstString(infile.val);
+				}
+
+			}
+
+			if (mode == MODE_STAT) {
+				size_t prim_stat_index = eset->primary_stats.getIndexByID(next);
+
+				if (prim_stat_index != eset->primary_stats.list.size()) {
+					stat = prim_stat_index;
+				}
+				else {
+					infile.error("SpawnLevel: '%s' is not a valid primary stat.", next.c_str());
+				}
+			}
+		}
+	}
+}
+
+void SpawnLevel::applyToStatBlock(StatBlock *src_stats, StatBlock *ratio_stats) {
+	if (!src_stats)
+		return;
+
+	if (mode == MODE_FIXED) {
+		src_stats->level = static_cast<int>(ratio);
+	}
+	else if (ratio_stats && ratio != 0) {
+		if (mode == MODE_LEVEL) {
+			src_stats->level = static_cast<int>(static_cast<float>(ratio_stats->level) * ratio);
+		}
+		else if (mode == MODE_STAT) {
+			int stat_val = 0;
+			for (size_t i = 0; i < eset->primary_stats.list.size(); ++i) {
+				if (stat == i) {
+					stat_val = ratio_stats->get_primary(i);
+					break;
+				}
+			}
+
+			src_stats->level = static_cast<int>(static_cast<float>(stat_val) * ratio);
+		}
+	}
+}
+
 Map::Map()
 	: filename("")
 	, layers()
@@ -486,33 +563,8 @@ void Map::loadEnemyGroup(FileParser &infile, Map_Group *group) {
 		}
 	}
 	else if (infile.key == "spawn_level") {
-		// @ATTR enemygroup.spawn_level|["default", "fixed", "level", "stat"], int, int, predefined_string : Mode, Enemy Level, Ratio, Primary stat|The level of spawned creatures. The need for the last three parameters depends on the mode being used. The "default" mode will just use the entity's normal level and doesn't require any additional parameters. The "fixed" mode only requires the enemy level as a parameter. The "stat" and "level" modes also require the ratio as a parameter. The ratio adjusts the scaling of the entity level. For example, spawn_level=stat,1,2,physical will set the spawned entity level to 1/2 the player's Physical stat. Only the "stat" mode requires the last parameter, which is simply the ID of the primary stat that should be used for scaling.
-		std::string mode = Parse::popFirstString(infile.val);
-		if (mode == "default") group->spawn_level.mode = SpawnLevel::MODE_DEFAULT;
-		else if (mode == "fixed") group->spawn_level.mode = SpawnLevel::MODE_FIXED;
-		else if (mode == "stat") group->spawn_level.mode = SpawnLevel::MODE_STAT;
-		else if (mode == "level") group->spawn_level.mode = SpawnLevel::MODE_LEVEL;
-		else infile.error("Map: Unknown spawn level mode '%s'", mode.c_str());
-
-		if (group->spawn_level.mode != SpawnLevel::MODE_DEFAULT) {
-			group->spawn_level.count = static_cast<float>(Parse::popFirstInt(infile.val));
-
-			if(group->spawn_level.mode != SpawnLevel::MODE_FIXED) {
-				group->spawn_level.ratio = Parse::popFirstFloat(infile.val);
-
-				if(group->spawn_level.mode == SpawnLevel::MODE_STAT) {
-					std::string stat = Parse::popFirstString(infile.val);
-					size_t prim_stat_index = eset->primary_stats.getIndexByID(stat);
-
-					if (prim_stat_index != eset->primary_stats.list.size()) {
-						group->spawn_level.stat = prim_stat_index;
-					}
-					else {
-						infile.error("Map: '%s' is not a valid primary stat.", stat.c_str());
-					}
-				}
-			}
-		}
+		// @ATTR enemygroup.spawn_level|["default", "fixed", "source_level", "source_stat"], float, predefined_string : Mode, Multiplier, Primary stat|The level of spawned creatures. The need for the last two parameters depends on the mode being used. The "default" mode will just use the entity's normal level and doesn't require any additional parameters. The "fixed" mode sets the multiplier as the enemy level. The "source_level" mode multiplies with the player's level. The "source_stat" mode multiplies by one of the player's primary stats. The stat is defined with the last parameter, which is simply the ID of the primary stat that should be used for scaling.
+		group->spawn_level.parse(infile);
 	}
 	else {
 		infile.error("Map: '%s' is not a valid key.", infile.key.c_str());

@@ -159,32 +159,12 @@ void EntityManager::handleNewMap () {
 		e->stats.invincible_requirements = me.invincible_requirements;
 
 		// Set level
-		if (me.spawn_level.mode != SpawnLevel::MODE_DEFAULT) {
-			if (me.spawn_level.mode == SpawnLevel::MODE_FIXED) {
-				e->stats.level = static_cast<int>(me.spawn_level.count);
-			}
-			else if (pc != NULL && me.spawn_level.ratio != 0) {
-				StatBlock* ratio_stats = &(pc->stats);
-
-				if (me.spawn_level.mode == SpawnLevel::MODE_LEVEL) {
-					e->stats.level = static_cast<int>(me.spawn_level.count * (static_cast<float>(ratio_stats->level) / me.spawn_level.ratio));
-				}
-				else if (me.spawn_level.mode == SpawnLevel::MODE_STAT) {
-					int stat_val = 0;
-					for (size_t i = 0; i < eset->primary_stats.list.size(); ++i) {
-						if (me.spawn_level.stat == i) {
-							stat_val = ratio_stats->get_primary(i);
-							break;
-						}
-					}
-
-					e->stats.level = static_cast<int>(me.spawn_level.count * (static_cast<float>(stat_val) / me.spawn_level.ratio));
-				}
-			}
-
-			// apply Effects and set HP to max HP
-			e->stats.recalc();
+		if (pc) {
+			me.spawn_level.applyToStatBlock(&e->stats, &pc->stats);
 		}
+
+		// apply Effects and set HP to max HP
+		e->stats.recalc();
 
 		entities.push_back(e);
 
@@ -304,28 +284,7 @@ void EntityManager::handleSpawn() {
 		//Set level
 		if (powers->isValid(e->stats.summoned_power_index)) {
 			SpawnLevel* spawn_level = &(powers->powers[e->stats.summoned_power_index]->spawn_level);
-
-			if (spawn_level->mode == SpawnLevel::MODE_FIXED) {
-				e->stats.level = static_cast<int>(spawn_level->count);
-			}
-			else if (e->stats.summoner != NULL && spawn_level->ratio != 0) {
-				StatBlock* ratio_stats = e->stats.summoner;
-
-				if (spawn_level->mode == SpawnLevel::MODE_LEVEL) {
-					e->stats.level = static_cast<int>(spawn_level->count * (static_cast<float>(ratio_stats->level) / spawn_level->ratio));
-				}
-				else if (spawn_level->mode == SpawnLevel::MODE_STAT) {
-					int stat_val = 0;
-					for (size_t i = 0; i < eset->primary_stats.list.size(); ++i) {
-						if (spawn_level->stat == i) {
-							stat_val = ratio_stats->get_primary(i);
-							break;
-						}
-					}
-
-					e->stats.level = static_cast<int>(spawn_level->count * (static_cast<float>(stat_val) / spawn_level->ratio));
-				}
-			}
+			spawn_level->applyToStatBlock(&e->stats, e->stats.summoner);
 
 			// apply Effects and set HP to max HP
 			e->stats.recalc();

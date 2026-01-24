@@ -40,17 +40,20 @@ public:
 	};
 
 	uint8_t mode;
-	float count;
 	float ratio;
 	size_t stat;
+	bool is_legacy;
 
 	SpawnLevel()
 		: mode(MODE_DEFAULT)
-		, count(0)
 		, ratio(0)
 		, stat(0)
+		, is_legacy(false)
 	{}
 	~SpawnLevel() {}
+
+	void parse(FileParser& infile);
+	void applyToStatBlock(StatBlock *src_stats, StatBlock *ratio_stats);
 };
 
 class Map_Group {

@@ -1022,33 +1022,8 @@ void PowerManager::loadPowers() {
 			}
 		}
 		else if (infile.key == "spawn_level") {
-			// @ATTR power.spawn_level|["default", "fixed", "level", "stat"], int, float, predefined_string : Mode, Entity Level, Ratio, Primary stat|The level of spawned creatures. The need for the last three parameters depends on the mode being used. The "default" mode will just use the entity's normal level and doesn't require any additional parameters. The "fixed" mode only requires the entity level as a parameter. The "stat" and "level" modes also require the ratio as a parameter. The ratio adjusts the scaling of the entity level. For example, spawn_level=stat,1,2,physical will set the spawned entity level to 1/2 the summoner's Physical stat. Only the "stat" mode requires the last parameter, which is simply the ID of the primary stat that should be used for scaling.
-			std::string mode = Parse::popFirstString(infile.val);
-			if (mode == "default") power->spawn_level.mode = SpawnLevel::MODE_DEFAULT;
-			else if (mode == "fixed") power->spawn_level.mode = SpawnLevel::MODE_FIXED;
-			else if (mode == "stat") power->spawn_level.mode = SpawnLevel::MODE_STAT;
-			else if (mode == "level") power->spawn_level.mode = SpawnLevel::MODE_LEVEL;
-			else infile.error("PowerManager: Unknown spawn level mode '%s'", mode.c_str());
-
-			if(power->spawn_level.mode != SpawnLevel::MODE_DEFAULT) {
-				power->spawn_level.count = static_cast<float>(Parse::popFirstInt(infile.val));
-
-				if(power->spawn_level.mode != SpawnLevel::MODE_FIXED) {
-					power->spawn_level.ratio = Parse::popFirstFloat(infile.val);
-
-					if(power->spawn_level.mode == SpawnLevel::MODE_STAT) {
-						std::string stat = Parse::popFirstString(infile.val);
-						size_t prim_stat_index = eset->primary_stats.getIndexByID(stat);
-
-						if (prim_stat_index != eset->primary_stats.list.size()) {
-							power->spawn_level.stat = prim_stat_index;
-						}
-						else {
-							infile.error("PowerManager: '%s' is not a valid primary stat.", stat.c_str());
-						}
-					}
-				}
-			}
+			// @ATTR power.spawn_level|["default", "fixed", "source_level", "source_stat"], float, predefined_string : Mode, Multiplier, Primary stat|The level of spawned creatures. The need for the last two parameters depends on the mode being used. The "default" mode will just use the entity's normal level and doesn't require any additional parameters. The "fixed" mode sets the multiplier as the enemy level. The "source_level" mode multiplies with the summoner's level. The "source_stat" mode multiplies by one of the summoner's primary stats. The stat is defined with the last parameter, which is simply the ID of the primary stat that should be used for scaling.
+			power->spawn_level.parse(infile);
 		}
 		else if (infile.key == "target_party") {
 			// @ATTR power.target_party|bool|Hazard will only affect party members.

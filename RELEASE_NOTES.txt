@@ -48,6 +48,7 @@ Engine features:
 * Added 'enable_gamepad_nav' property to menus/actionbar.txt config.
 * Added 'fade_wall_alpha' property to engine/misc.txt config.
 * Added 'cycle_menus' keybinding to quickly open Char/Inv and Log/Pow menus.
+* Added 'source_level' and 'source_stat' modes to map enemy & power 'spawn_level' properties. They take a single value as a multiplier and are intended to replace the 'level' and 'stat' modes.
 * Android: Enabled use of external input devices (gamepads, keyboards, mice)
 
 Engine fixes:
