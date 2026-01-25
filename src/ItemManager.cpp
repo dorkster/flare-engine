@@ -430,7 +430,7 @@ void ItemManager::loadItems(const std::string& filename) {
 	bool clear_replace_power = false;
 
 	ItemID id = 0;
-	Item* item;
+	Item* item = NULL;
 	bool id_line;
 	while (infile.next()) {
 		if (infile.key == "id") {
@@ -1896,7 +1896,7 @@ void ItemManager::loadExtendedItems(const std::string& filename) {
 		return;
 
 	ItemID id = 0;
-	Item* item;
+	Item* item = NULL;
 	bool id_line;
 	while (infile.next()) {
 		if (infile.key == "id") {

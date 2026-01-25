@@ -317,7 +317,7 @@ void PowerManager::loadPowers() {
 	bool clear_post_effects = false;
 
 	PowerID input_id = 0;
-	Power* power;
+	Power* power = NULL;
 	bool id_line;
 
 	while (infile.next()) {
