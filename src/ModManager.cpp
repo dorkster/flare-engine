@@ -290,9 +290,13 @@ std::vector<std::string> ModManager::list(const std::string &path, bool full_pat
 	if (ret.empty()) return ret;
 
 	if (!full_paths) {
+		std::string converted_path = Filesystem::convertSlashes(path);
+
 		// reduce the each file path down to be relative to mods/
 		for (unsigned i=0; i<ret.size(); ++i) {
-			ret[i] = ret[i].substr(ret[i].rfind(path), ret[i].length());
+			size_t start = ret[i].rfind(converted_path);
+			if (start <= ret[i].size())
+				ret[i] = ret[i].substr(start, ret[i].length());
 		}
 
 		// remove duplicates
