@@ -857,42 +857,42 @@ Chunk* Map::procGenWalkSingle(int path_type, size_t cur_x, size_t cur_y, int wal
 	size_t MAP_SIZE_X = procgen_chunks[0].size();
 	size_t MAP_SIZE_Y = procgen_chunks.size();
 
-    if (cur_x >= MAP_SIZE_X || cur_y >= MAP_SIZE_Y)
-        return NULL; // NOTE: should we always return a valid chunk instead?
+	if (cur_x >= MAP_SIZE_X || cur_y >= MAP_SIZE_Y)
+		return NULL; // NOTE: should we always return a valid chunk instead?
 
-    Chunk* prev = &procgen_chunks[cur_y][cur_x];
+	Chunk* prev = &procgen_chunks[cur_y][cur_x];
 
-    if ((walk_x < 0 && cur_x == 0) || (walk_y < 0 && cur_y == 0))
-        return prev;
-    else if ((cur_x + walk_x >= MAP_SIZE_X) || (cur_y + walk_y >= MAP_SIZE_Y))
-        return prev;
+	if ((walk_x < 0 && cur_x == 0) || (walk_y < 0 && cur_y == 0))
+		return prev;
+	else if ((cur_x + walk_x >= MAP_SIZE_X) || (cur_y + walk_y >= MAP_SIZE_Y))
+		return prev;
 
-    Chunk* next = &procgen_chunks[cur_y + walk_y][cur_x + walk_x];
+	Chunk* next = &procgen_chunks[cur_y + walk_y][cur_x + walk_x];
 
-    if (next->type == Chunk::TYPE_START)
-        return prev;
-    else if (next->type == Chunk::TYPE_END)
-        return prev;
-    else if (next->type == Chunk::TYPE_DOOR_NORTH_SOUTH || next->type == Chunk::TYPE_DOOR_WEST_EAST)
-        return prev;
+	if (next->type == Chunk::TYPE_START)
+		return prev;
+	else if (next->type == Chunk::TYPE_END)
+		return prev;
+	else if (next->type == Chunk::TYPE_DOOR_NORTH_SOUTH || next->type == Chunk::TYPE_DOOR_WEST_EAST)
+		return prev;
 
-    // walking the main path doesn't allow overlapping existing path
-    // branches, on the other hand, can overlap if their door level is the same
-    if (path_type == PATH_MAIN) {
-        if (next->type != Chunk::TYPE_EMPTY)
-            return prev;
-    }
+	// walking the main path doesn't allow overlapping existing path
+	// branches, on the other hand, can overlap if their door level is the same
+	if (path_type == PATH_MAIN) {
+		if (next->type != Chunk::TYPE_EMPTY)
+			return prev;
+	}
 
-    int link_count = 0;
-    for (int i = 0; i < Chunk::LINK_COUNT; ++i) {
-        if (next->links[i])
-            link_count++;
-    }
+	int link_count = 0;
+	for (int i = 0; i < Chunk::LINK_COUNT; ++i) {
+		if (next->links[i])
+			link_count++;
+	}
 
-    if (link_count > 0 && (next->door_level != prev->door_level || rand() % link_count > 0))
-        return prev;
+	if (link_count > 0 && (next->door_level != prev->door_level || rand() % link_count > 0))
+		return prev;
 
-    return next;
+	return next;
 }
 
 int Map::procGenCreatePath(int path_type, int desired_length, int* _door_count, size_t start_x, size_t start_y) {
@@ -902,58 +902,58 @@ int Map::procGenCreatePath(int path_type, int desired_length, int* _door_count, 
 	size_t MAP_SIZE_X = procgen_chunks[0].size();
 	size_t MAP_SIZE_Y = procgen_chunks.size();
 
-    if (path_type == PATH_MAIN) {
-        // zero out the map data
-        for (size_t i = 0; i < MAP_SIZE_Y; ++i) {
-            for (size_t j = 0; j < MAP_SIZE_X; ++j) {
-                Chunk* chunk = &procgen_chunks[i][j];
-                chunk->type = Chunk::TYPE_EMPTY;
-                chunk->door_level = 0;
-                for (size_t k = 0; k < Chunk::LINK_COUNT; ++k) {
-                    chunk->links[k] = NULL;
-                }
-            }
-        }
+	if (path_type == PATH_MAIN) {
+		// zero out the map data
+		for (size_t i = 0; i < MAP_SIZE_Y; ++i) {
+			for (size_t j = 0; j < MAP_SIZE_X; ++j) {
+				Chunk* chunk = &procgen_chunks[i][j];
+				chunk->type = Chunk::TYPE_EMPTY;
+				chunk->door_level = 0;
+				for (size_t k = 0; k < Chunk::LINK_COUNT; ++k) {
+					chunk->links[k] = NULL;
+				}
+			}
+		}
 
-        procgen_branch_roots.clear();
-    }
+		procgen_branch_roots.clear();
+	}
 
-    // set start tile
-    size_t cur_x = 0;
-    size_t cur_y = 0;
-    if (path_type == PATH_MAIN) {
-        cur_x = rand() % MAP_SIZE_X;
-        cur_y = rand() % MAP_SIZE_Y;
-    }
-    else {
-        cur_x = start_x;
-        cur_y = start_y;
-    }
-    Chunk* current = &(procgen_chunks[cur_y][cur_x]);
+	// set start tile
+	size_t cur_x = 0;
+	size_t cur_y = 0;
+	if (path_type == PATH_MAIN) {
+		cur_x = rand() % MAP_SIZE_X;
+		cur_y = rand() % MAP_SIZE_Y;
+	}
+	else {
+		cur_x = start_x;
+		cur_y = start_y;
+	}
+	Chunk* current = &(procgen_chunks[cur_y][cur_x]);
 
-    if (path_type == PATH_MAIN)
-        current->type = Chunk::TYPE_START;
+	if (path_type == PATH_MAIN)
+		current->type = Chunk::TYPE_START;
 
-    int steps = static_cast<int>((MAP_SIZE_X * MAP_SIZE_Y));
+	int steps = static_cast<int>((MAP_SIZE_X * MAP_SIZE_Y));
 
-    if (path_type == PATH_BRANCH)
-        steps = desired_length;
+	if (path_type == PATH_BRANCH)
+		steps = desired_length;
 
-    int door_count = 0;
-    int door_chance = 0;
-    int door_dist = 0;
-    int door_min_dist = procgen_doors_max > 0 ? std::max(2, desired_length / procgen_doors_max) : 0;
+	int door_count = 0;
+	int door_chance = 0;
+	int door_dist = 0;
+	int door_min_dist = procgen_doors_max > 0 ? std::max(2, desired_length / procgen_doors_max) : 0;
 	if (procgen_door_spacing_min > 0) {
 		door_min_dist = std::max(2, procgen_door_spacing_min);
 	}
-    int path_length = 0;
-    int branch_chance = 0;
-    int branch_count = 0;
-    int max_branches = 2;
+	int path_length = 0;
+	int branch_chance = 0;
+	int branch_count = 0;
+	int max_branches = 2;
 
-    while (steps >= 0) {
-        int link = rand() % Chunk::LINK_COUNT;
-        Chunk* prev = current;
+	while (steps >= 0) {
+		int link = rand() % Chunk::LINK_COUNT;
+		Chunk* prev = current;
 
 		// if we're on a door chunk, we can only go in the direction opposite of the initial link
 		if (current->type == Chunk::TYPE_DOOR_NORTH_SOUTH && (link == Chunk::LINK_WEST || link == Chunk::LINK_EAST)) {
@@ -969,56 +969,56 @@ int Map::procGenCreatePath(int path_type, int desired_length, int* _door_count, 
 				link = Chunk::LINK_WEST;
 		}
 
-        switch (link) {
-            case Chunk::LINK_NORTH:
-                current = procGenWalkSingle(path_type, cur_x, cur_y, 0, -1);
-                if (current != prev) {
-                    prev->links[Chunk::LINK_NORTH] = current;
-                    current->links[Chunk::LINK_SOUTH] = prev;
-                    current->type = Chunk::TYPE_NORMAL;
-                    cur_y--;
-                    door_dist++;
-                    path_length++;
-                }
-                break;
-            case Chunk::LINK_SOUTH:
-                current = procGenWalkSingle(path_type, cur_x, cur_y, 0, 1);
-                if (current != prev) {
-                    prev->links[Chunk::LINK_SOUTH] = current;
-                    current->links[Chunk::LINK_NORTH] = prev;
-                    current->type = Chunk::TYPE_NORMAL;
-                    cur_y++;
-                    door_dist++;
-                    path_length++;
-                }
-                break;
-            case Chunk::LINK_WEST:
-                current = procGenWalkSingle(path_type, cur_x, cur_y, 1, 0);
-                if (current != prev) {
-                    prev->links[Chunk::LINK_EAST] = current;
-                    current->links[Chunk::LINK_WEST] = prev;
-                    current->type = Chunk::TYPE_NORMAL;
-                    cur_x++;
-                    door_dist++;
-                    path_length++;
-                }
-                break;
-            case Chunk::LINK_EAST:
-                current = procGenWalkSingle(path_type, cur_x, cur_y, -1, 0);
-                if (current != prev) {
-                    prev->links[Chunk::LINK_WEST] = current;
-                    current->links[Chunk::LINK_EAST] = prev;
-                    current->type = Chunk::TYPE_NORMAL;
-                    cur_x--;
-                    door_dist++;
-                    path_length++;
-                }
-                break;
-        };
+		switch (link) {
+			case Chunk::LINK_NORTH:
+				current = procGenWalkSingle(path_type, cur_x, cur_y, 0, -1);
+				if (current != prev) {
+					prev->links[Chunk::LINK_NORTH] = current;
+					current->links[Chunk::LINK_SOUTH] = prev;
+					current->type = Chunk::TYPE_NORMAL;
+					cur_y--;
+					door_dist++;
+					path_length++;
+				}
+				break;
+			case Chunk::LINK_SOUTH:
+				current = procGenWalkSingle(path_type, cur_x, cur_y, 0, 1);
+				if (current != prev) {
+					prev->links[Chunk::LINK_SOUTH] = current;
+					current->links[Chunk::LINK_NORTH] = prev;
+					current->type = Chunk::TYPE_NORMAL;
+					cur_y++;
+					door_dist++;
+					path_length++;
+				}
+				break;
+			case Chunk::LINK_WEST:
+				current = procGenWalkSingle(path_type, cur_x, cur_y, 1, 0);
+				if (current != prev) {
+					prev->links[Chunk::LINK_EAST] = current;
+					current->links[Chunk::LINK_WEST] = prev;
+					current->type = Chunk::TYPE_NORMAL;
+					cur_x++;
+					door_dist++;
+					path_length++;
+				}
+				break;
+			case Chunk::LINK_EAST:
+				current = procGenWalkSingle(path_type, cur_x, cur_y, -1, 0);
+				if (current != prev) {
+					prev->links[Chunk::LINK_WEST] = current;
+					current->links[Chunk::LINK_EAST] = prev;
+					current->type = Chunk::TYPE_NORMAL;
+					cur_x--;
+					door_dist++;
+					path_length++;
+				}
+				break;
+		};
 
-        if (current != prev) {
-            if (path_type == PATH_MAIN) {
-                if (prev->type != Chunk::TYPE_START && prev->isStraight() && door_count < procgen_doors_max && rand() % 100 < door_chance) {
+		if (current != prev) {
+			if (path_type == PATH_MAIN) {
+				if (prev->type != Chunk::TYPE_START && prev->isStraight() && door_count < procgen_doors_max && rand() % 100 < door_chance) {
 					if (prev->links[Chunk::LINK_NORTH] && prev->links[Chunk::LINK_SOUTH])
 						prev->type = Chunk::TYPE_DOOR_NORTH_SOUTH;
 					else if (prev->links[Chunk::LINK_WEST] && prev->links[Chunk::LINK_EAST])
@@ -1027,44 +1027,44 @@ int Map::procGenCreatePath(int path_type, int desired_length, int* _door_count, 
 						// shouldn't be able to get here!
 						Utils::logError("Map: Trying to place door chunk, but links don't form a straight path.");
 					}
-                    prev->door_level++;
-                    current->door_level++;
-                    door_chance = 0;
-                    door_count++;
-                    door_dist = 0;
-                    branch_count = 0;
-                }
+					prev->door_level++;
+					current->door_level++;
+					door_chance = 0;
+					door_count++;
+					door_dist = 0;
+					branch_count = 0;
+				}
 
-                if (door_dist > door_min_dist) {
+				if (door_dist > door_min_dist) {
 					if (door_count == 0)
 						door_chance = 100;
 					else
 						door_chance += 5;
 				}
 
-                if (current->type == Chunk::TYPE_NORMAL && branch_count < max_branches && rand() % 100 < branch_chance) {
-                    procgen_branch_roots.push_back(Point(static_cast<int>(cur_x), static_cast<int>(cur_y)));
-                    branch_chance = 0;
-                    branch_count++;
-                }
+				if (current->type == Chunk::TYPE_NORMAL && branch_count < max_branches && rand() % 100 < branch_chance) {
+					procgen_branch_roots.push_back(Point(static_cast<int>(cur_x), static_cast<int>(cur_y)));
+					branch_chance = 0;
+					branch_count++;
+				}
 
-                branch_chance += 5;
-            }
+				branch_chance += 5;
+			}
 
-            current->door_level = prev->door_level;
-        }
+			current->door_level = prev->door_level;
+		}
 
-        steps--;
-    }
+		steps--;
+	}
 
-    // last room is the end
-    if (path_type == PATH_MAIN)
-        current->type = Chunk::TYPE_END;
+	// last room is the end
+	if (path_type == PATH_MAIN)
+		current->type = Chunk::TYPE_END;
 
-    if (_door_count)
-        *_door_count = door_count;
+	if (_door_count)
+		*_door_count = door_count;
 
-    return path_length;
+	return path_length;
 }
 
 void Map::procGenFillArea(const std::string& config_filename, const Rect& area) {
@@ -1175,57 +1175,57 @@ void Map::procGenFillArea(const std::string& config_filename, const Rect& area) 
 	std::vector< std::vector<Chunk*> > normal_chunks; // used to find chunks to change to key, treasure, etc.
 	procgen_branch_roots.clear();
 
-    normal_chunks.resize(procgen_doors_max);
+	normal_chunks.resize(procgen_doors_max);
 
-    int main_path_length = 0;
-    main_path_length_min = main_path_length_min == 0 ? static_cast<int>((MAP_SIZE_X * MAP_SIZE_Y) / 2) : std::max(3, main_path_length_min);
-    main_path_length_max = main_path_length_max == 0 ? static_cast<int>(MAP_SIZE_X * MAP_SIZE_Y) : std::max(main_path_length_min, main_path_length_max);
-    int gen_attempts = 0;
-    int door_count = 0;
+	int main_path_length = 0;
+	main_path_length_min = main_path_length_min == 0 ? static_cast<int>((MAP_SIZE_X * MAP_SIZE_Y) / 2) : std::max(3, main_path_length_min);
+	main_path_length_max = main_path_length_max == 0 ? static_cast<int>(MAP_SIZE_X * MAP_SIZE_Y) : std::max(main_path_length_min, main_path_length_max);
+	int gen_attempts = 0;
+	int door_count = 0;
 
-    while ((main_path_length < main_path_length_min || main_path_length > main_path_length_max || (door_count == 0 && procgen_doors_max > 0)) && gen_attempts < main_path_attempts_max) {
-        main_path_length = procGenCreatePath(PATH_MAIN, main_path_length, &door_count, 0, 0);
+	while ((main_path_length < main_path_length_min || main_path_length > main_path_length_max || (door_count == 0 && procgen_doors_max > 0)) && gen_attempts < main_path_attempts_max) {
+		main_path_length = procGenCreatePath(PATH_MAIN, main_path_length, &door_count, 0, 0);
 
-        gen_attempts++;
-    }
-    printf("Main path length: %d. Generator attempts: %d\n", main_path_length, gen_attempts);
+		gen_attempts++;
+	}
+	printf("Main path length: %d. Generator attempts: %d\n", main_path_length, gen_attempts);
 
-    for (size_t i = 0; i < procgen_branch_roots.size(); ++i) {
-        procGenCreatePath(PATH_BRANCH, branch_length, NULL, procgen_branch_roots[i].x, procgen_branch_roots[i].y);
-        // map_chunks[branch_roots[i].second][branch_roots[i].first].type = Chunk::TYPE_BRANCH;
-    }
+	for (size_t i = 0; i < procgen_branch_roots.size(); ++i) {
+		procGenCreatePath(PATH_BRANCH, branch_length, NULL, procgen_branch_roots[i].x, procgen_branch_roots[i].y);
+		// map_chunks[branch_roots[i].second][branch_roots[i].first].type = Chunk::TYPE_BRANCH;
+	}
 
 	Point start_chunk;
 
-    // gather all normal chunks for placing keys/treasure/etc.
-    for (size_t i = 0; i < MAP_SIZE_Y; ++i) {
-        for (size_t j = 0; j < MAP_SIZE_X; ++j) {
-            Chunk* chunk = &procgen_chunks[i][j];
+	// gather all normal chunks for placing keys/treasure/etc.
+	for (size_t i = 0; i < MAP_SIZE_Y; ++i) {
+		for (size_t j = 0; j < MAP_SIZE_X; ++j) {
+			Chunk* chunk = &procgen_chunks[i][j];
 
-            if (chunk->type == Chunk::TYPE_NORMAL && static_cast<size_t>(chunk->door_level) < normal_chunks.size()) {
-                normal_chunks[chunk->door_level].push_back(chunk);
-            }
+			if (chunk->type == Chunk::TYPE_NORMAL && static_cast<size_t>(chunk->door_level) < normal_chunks.size()) {
+				normal_chunks[chunk->door_level].push_back(chunk);
+			}
 			else if (chunk->type == Chunk::TYPE_START) {
 				start_chunk.x = static_cast<int>(j);
 				start_chunk.y = static_cast<int>(i);
 			}
-        }
-    }
+		}
+	}
 
-    for (size_t i = 0; i < static_cast<size_t>(door_count); ++i) {
-        if (i >= normal_chunks.size())
-            break;
+	for (size_t i = 0; i < static_cast<size_t>(door_count); ++i) {
+		if (i >= normal_chunks.size())
+			break;
 
-        if (normal_chunks[i].empty()) {
-            // printf("Tried to place key, but no chunks on current door level: %d\n", i);
-            continue;
-        }
+		if (normal_chunks[i].empty()) {
+			// printf("Tried to place key, but no chunks on current door level: %d\n", i);
+			continue;
+		}
 
-        size_t chunk_index = rand() % normal_chunks[i].size();
-        Chunk* chunk = normal_chunks[i][chunk_index];
-        chunk->type = Chunk::TYPE_KEY;
-        normal_chunks[i].erase(normal_chunks[i].begin() + chunk_index);
-    }
+		size_t chunk_index = rand() % normal_chunks[i].size();
+		Chunk* chunk = normal_chunks[i][chunk_index];
+		chunk->type = Chunk::TYPE_KEY;
+		normal_chunks[i].erase(normal_chunks[i].begin() + chunk_index);
+	}
 
 	for (size_t chunk_y = 0; chunk_y < procgen_chunks.size(); ++chunk_y) {
 		for (size_t chunk_x = 0; chunk_x < procgen_chunks[chunk_y].size(); ++chunk_x) {
@@ -1301,50 +1301,50 @@ void Map::procGenFillArea(const std::string& config_filename, const Rect& area) 
 
 	// print map to console
 	// TODO REMOVE!
-    for (size_t i = 0; i < MAP_SIZE_Y; ++i) {
-        for (size_t j = 0; j < MAP_SIZE_X; ++j) {
-            Chunk* chunk = &procgen_chunks[i][j];
+	for (size_t i = 0; i < MAP_SIZE_Y; ++i) {
+		for (size_t j = 0; j < MAP_SIZE_X; ++j) {
+			Chunk* chunk = &procgen_chunks[i][j];
 
-            switch (chunk->type) {
-                case Chunk::TYPE_EMPTY:
-                    printf(".");
-                    break;
-                case Chunk::TYPE_START:
-                    printf("\e[37;42m");
-                    chunk->print();
-                    printf("\e[0m");
-                    break;
-                case Chunk::TYPE_END:
-                    printf("\e[37;41m");
-                    chunk->print();
-                    printf("\e[0m");
-                    break;
-                case Chunk::TYPE_DOOR_NORTH_SOUTH:
-                    printf("\e[37;43m");
-                    chunk->print();
-                    printf("\e[0m");
-                    break;
-                case Chunk::TYPE_DOOR_WEST_EAST:
-                    printf("\e[37;43m");
-                    chunk->print();
-                    printf("\e[0m");
-                    break;
-                case Chunk::TYPE_KEY:
-                    printf("\e[37;44m");
-                    chunk->print();
-                    printf("\e[0m");
-                    break;
-                case Chunk::TYPE_BRANCH:
-                    printf("\e[37;45m");
-                    chunk->print();
-                    printf("\e[0m");
-                    break;
-                default:
-                    chunk->print();
-                    break;
-            };
-        }
-        printf("\n");
+			switch (chunk->type) {
+				case Chunk::TYPE_EMPTY:
+					printf(".");
+					break;
+				case Chunk::TYPE_START:
+					printf("\e[37;42m");
+					chunk->print();
+					printf("\e[0m");
+					break;
+				case Chunk::TYPE_END:
+					printf("\e[37;41m");
+					chunk->print();
+					printf("\e[0m");
+					break;
+				case Chunk::TYPE_DOOR_NORTH_SOUTH:
+					printf("\e[37;43m");
+					chunk->print();
+					printf("\e[0m");
+					break;
+				case Chunk::TYPE_DOOR_WEST_EAST:
+					printf("\e[37;43m");
+					chunk->print();
+					printf("\e[0m");
+					break;
+				case Chunk::TYPE_KEY:
+					printf("\e[37;44m");
+					chunk->print();
+					printf("\e[0m");
+					break;
+				case Chunk::TYPE_BRANCH:
+					printf("\e[37;45m");
+					chunk->print();
+					printf("\e[0m");
+					break;
+				default:
+					chunk->print();
+					break;
+			};
+		}
+		printf("\n");
 	}
 
 	// cleanup
@@ -1495,54 +1495,54 @@ std::string Map::getFOWFilename() {
 }
 
 bool Chunk::isStraight() {
-    return ((links[LINK_NORTH] && links[LINK_SOUTH] && !links[LINK_WEST] && !links[LINK_EAST]) || (!links[LINK_NORTH] && !links[LINK_SOUTH] && links[LINK_WEST] && links[LINK_EAST]));
+	return ((links[LINK_NORTH] && links[LINK_SOUTH] && !links[LINK_WEST] && !links[LINK_EAST]) || (!links[LINK_NORTH] && !links[LINK_SOUTH] && links[LINK_WEST] && links[LINK_EAST]));
 }
 
 void Chunk::print() {
-    if (links[LINK_NORTH] && links[LINK_SOUTH] && links[LINK_WEST] && links[LINK_EAST]) {
-        printf("╬");
-    }
-    else if (links[LINK_NORTH] && links[LINK_WEST] && links[LINK_EAST]) {
-        printf("╩");
-    }
-    else if (links[LINK_SOUTH] && links[LINK_WEST] && links[LINK_EAST]) {
-        printf("╦");
-    }
-    else if (links[LINK_NORTH] && links[LINK_SOUTH] && links[LINK_WEST]) {
-        printf("╣");
-    }
-    else if (links[LINK_NORTH] && links[LINK_SOUTH] && links[LINK_EAST]) {
-        printf("╠");
-    }
-    else if (links[LINK_WEST] && links[LINK_EAST]) {
-        printf("═");
-    }
-    else if (links[LINK_NORTH] && links[LINK_SOUTH]) {
-        printf("║");
-    }
-    else if (links[LINK_EAST] && links[LINK_SOUTH]) {
-        printf("╔");
-    }
-    else if (links[LINK_WEST] && links[LINK_SOUTH]) {
-        printf("╗");
-    }
-    else if (links[LINK_EAST] && links[LINK_NORTH]) {
-        printf("╚");
-    }
-    else if (links[LINK_WEST] && links[LINK_NORTH]) {
-        printf("╝");
-    }
-    else if (links[LINK_NORTH]) {
-        printf("╨");
-    }
-    else if (links[LINK_SOUTH]) {
-        printf("╥");
-    }
-    else if (links[LINK_WEST]) {
-        printf("╡");
-    }
-    else if (links[LINK_EAST]) {
-        printf("╞");
-    }
+	if (links[LINK_NORTH] && links[LINK_SOUTH] && links[LINK_WEST] && links[LINK_EAST]) {
+		printf("╬");
+	}
+	else if (links[LINK_NORTH] && links[LINK_WEST] && links[LINK_EAST]) {
+		printf("╩");
+	}
+	else if (links[LINK_SOUTH] && links[LINK_WEST] && links[LINK_EAST]) {
+		printf("╦");
+	}
+	else if (links[LINK_NORTH] && links[LINK_SOUTH] && links[LINK_WEST]) {
+		printf("╣");
+	}
+	else if (links[LINK_NORTH] && links[LINK_SOUTH] && links[LINK_EAST]) {
+		printf("╠");
+	}
+	else if (links[LINK_WEST] && links[LINK_EAST]) {
+		printf("═");
+	}
+	else if (links[LINK_NORTH] && links[LINK_SOUTH]) {
+		printf("║");
+	}
+	else if (links[LINK_EAST] && links[LINK_SOUTH]) {
+		printf("╔");
+	}
+	else if (links[LINK_WEST] && links[LINK_SOUTH]) {
+		printf("╗");
+	}
+	else if (links[LINK_EAST] && links[LINK_NORTH]) {
+		printf("╚");
+	}
+	else if (links[LINK_WEST] && links[LINK_NORTH]) {
+		printf("╝");
+	}
+	else if (links[LINK_NORTH]) {
+		printf("╨");
+	}
+	else if (links[LINK_SOUTH]) {
+		printf("╥");
+	}
+	else if (links[LINK_WEST]) {
+		printf("╡");
+	}
+	else if (links[LINK_EAST]) {
+		printf("╞");
+	}
 }
 

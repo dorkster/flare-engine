@@ -153,38 +153,38 @@ public:
 
 class Chunk {
 public:
-    enum {
-        TYPE_EMPTY = 0,
+	enum {
+		TYPE_EMPTY = 0,
 		TYPE_LINKS,
-        TYPE_NORMAL,
-        TYPE_START,
-        TYPE_END,
-        TYPE_KEY,
-        TYPE_DOOR_NORTH_SOUTH,
-        TYPE_DOOR_WEST_EAST,
-        TYPE_BRANCH,
-        TYPE_COUNT
-    };
+		TYPE_NORMAL,
+		TYPE_START,
+		TYPE_END,
+		TYPE_KEY,
+		TYPE_DOOR_NORTH_SOUTH,
+		TYPE_DOOR_WEST_EAST,
+		TYPE_BRANCH,
+		TYPE_COUNT
+	};
 
-    enum {
-        LINK_NORTH = 0,
-        LINK_SOUTH,
-        LINK_WEST,
-        LINK_EAST,
-        LINK_COUNT,
-    };
+	enum {
+		LINK_NORTH = 0,
+		LINK_SOUTH,
+		LINK_WEST,
+		LINK_EAST,
+		LINK_COUNT,
+	};
 
-    int type;
-    int door_level;
+	int type;
+	int door_level;
 	std::vector<Chunk*> links;
 
-    Chunk()
-        : type(TYPE_EMPTY)
-        , door_level(0)
+	Chunk()
+		: type(TYPE_EMPTY)
+		, door_level(0)
 		, links(4, NULL)
-    {}
+	{}
 
-    bool isStraight();
+	bool isStraight();
 	void print();
 };
 
