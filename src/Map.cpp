@@ -38,7 +38,9 @@ FLARE.  If not, see http://www.gnu.org/licenses/
 #include "StatBlock.h"
 #include "Utils.h"
 #include "UtilsFileSystem.h"
+#include "UtilsMath.h"
 #include "UtilsParsing.h"
+
 #include <vector>
 
 void SpawnLevel::parse(FileParser &infile) {
@@ -393,7 +395,7 @@ void Map::loadHeader(FileParser &infile) {
 		// @ATTR tileheight|int|Inherited from Tiled map file. Unused by engine.
 	}
 	else if (infile.key == "procgen_type") {
-		// TODO @ATTR
+		// @ATTR procgen_type|["links", "normal", "start", "end", "key", "door_north_south", "door_west_east"]|Defines the type of chunk this map is when used in procedural map generation.
 		if (infile.val == "links") {
 			procgen_type = Chunk::TYPE_LINKS;
 		}
@@ -669,7 +671,7 @@ void Map::loadNPC(FileParser &infile) {
 		map_npcs.back().type = infile.val;
 	}
 	else if (infile.key == "filename") {
-		// @ATTR npc.filename|string|Filename of an NPC definition.
+		// @ATTR npc.filename|filename|Filename of an NPC definition.
 		map_npcs.back().id = infile.val;
 	}
 	else if (infile.key == "location") {
@@ -1076,38 +1078,52 @@ void Map::procGenFillArea(const std::string& config_filename, const Rect& area) 
 	int main_path_length_min = 0;
 	int main_path_length_max = 0;
 	int main_path_attempts_max = 0;
-	int branch_length = 0;
+	int branch_length_min = 0;
+	int branch_length_max = 0;
 
 	std::vector<std::string> chunk_filenames;
 
+	// @CLASS Map: Procgen rules|Description of maps/procgen_rules
 	FileParser infile;
 	if (infile.open(config_filename, FileParser::MOD_FILE, FileParser::ERROR_NORMAL)) {
 		while (infile.next()) {
 			if (infile.section == "settings") {
 				if (infile.key == "doors_max") {
+					// @ATTR settings.doors_max|int|Maximum number of door chunks that can be placed in this region.
 					procgen_doors_max = Parse::toInt(infile.val);
 				}
 				else if (infile.key == "main_path_length_min") {
+					// @ATTR settings.main_path_length_min|int|Minimum length of the 'main' path (start chunk to end chunk).
 					main_path_length_min = Parse::toInt(infile.val);
 				}
 				else if (infile.key == "main_path_length_max") {
+					// @ATTR settings.main_path_length_max|int|Maximum length of the 'main' path (start chunk to end chunk).
 					main_path_length_max = Parse::toInt(infile.val);
 				}
 				else if (infile.key == "main_path_attempts_max") {
+					// @ATTR settings.main_path_attempts_max|int|Maximum number of attempts to generate the main path to match the min/max constraints.
 					main_path_attempts_max = Parse::toInt(infile.val);
 				}
-				else if (infile.key == "branch_length") {
-					branch_length = Parse::toInt(infile.val);
+				else if (infile.key == "branch_length_min") {
+					// @ATTR settings.branch_length_min|int|Minimum number of steps taken when creating a branch off the main path.
+					branch_length_min = Parse::toInt(infile.val);
+				}
+				else if (infile.key == "branch_length_max") {
+					// @ATTR settings.branch_length_max|int|Maximum number of steps taken when creating a branch off the main path.
+					branch_length_max = Parse::toInt(infile.val);
 				}
 				else if (infile.key == "branches_per_door_level_max") {
+					// @ATTR settings.branches_per_door_level_max|int|Maximum number of branches that can be created between each 'door level'. A door level is defined as the set of chunks between a set of 2 door chunks (start and end chunks count as doors here).
 					procgen_branches_per_door_level_max = Parse::toInt(infile.val);
 				}
 				else if (infile.key == "door_spacing_min") {
+					// @ATTR settings.door_spacing_min|int|The minimum number of chunk length of each door level.
 					procgen_door_spacing_min = Parse::toInt(infile.val);
 				}
 			}
 			else if (infile.section == "chunks") {
 				if (infile.key == "filename") {
+					// @ATTR chunks.filename|repeatable(filename)|Map chunk file.
 					chunk_filenames.push_back(infile.val);
 				}
 			}
@@ -1191,6 +1207,7 @@ void Map::procGenFillArea(const std::string& config_filename, const Rect& area) 
 	printf("Main path length: %d. Generator attempts: %d\n", main_path_length, gen_attempts);
 
 	for (size_t i = 0; i < procgen_branch_roots.size(); ++i) {
+		int branch_length = Math::randBetween(branch_length_min, std::min(branch_length_min, branch_length_max));
 		procGenCreatePath(PATH_BRANCH, branch_length, NULL, procgen_branch_roots[i].x, procgen_branch_roots[i].y);
 		// map_chunks[branch_roots[i].second][branch_roots[i].first].type = Chunk::TYPE_BRANCH;
 	}

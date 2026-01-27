@@ -245,7 +245,7 @@ bool EventManager::loadEventComponentString(std::string &key, std::string &val, 
 		e->data[1].Float = Parse::popFirstFloat(val);
 	}
 	else if (key == "intermap") {
-		// @ATTR event.intermap|filename, int, int, int : Map file, X, Y, Spawn point ID|Jump to specific map. X & Y (optional) can be used to specifiy the spawn position. Alternatively, use position (-1, -1) and an integer ID to specify an event containing a hero_pos_id component to use its location as the spawn point.
+		// @ATTR event.intermap|filename, int, int, int : Map file, X, Y, Spawn point ID|Jump to specific map. X/Y (optional) can be used to specifiy the spawn position. Alternatively, use position (-1, -1) and an integer ID to specify an event containing a hero_pos_id component to use its location as the spawn point.
 		e->type = EventComponent::INTERMAP;
 
 		e->s = Parse::popFirstString(val);
@@ -775,19 +775,19 @@ bool EventManager::loadEventComponentString(std::string &key, std::string &val, 
 			Utils::logError("EventManager: '%s' is not a valid random_status action.", mode.c_str());
 	}
 	else if (key == "procgen_filename") {
-		// @ATTR TODO
+		// @ATTR event.procgen_filename|filename|Filename of procedural map generation rules file.
 		e->type = EventComponent::PROCGEN_FILENAME;
 
 		e->s = val;
 	}
 	else if (key == "procgen_link") {
-		// @ATTR TODO
+		// @ATTR event.procgen_link|["north", "south", "west", "east"]|Only used in maps with the procgen_type of "links". Defines a region to be used as a link. The tiles and objects in this region will replace the matching region of the target chunk that has the specified link.
 		e->type = EventComponent::PROCGEN_LINK;
 
 		e->s = val;
 	}
 	else if (key == "requires_door_level") {
-		// @ATTR TODO
+		// @ATTR event.requires_door_level|int|Event requires map chunk to be on a specific door level. For procedural generation chunks only.
 		e->type = EventComponent::PROCGEN_REQUIRES_DOOR_LEVEL;
 
 		e->data[0].Int = Parse::popFirstInt(val);
@@ -807,10 +807,12 @@ bool EventManager::loadEventComponentString(std::string &key, std::string &val, 
 		}
 	}
 	else if (key == "hero_pos_id") {
-		// @ATTR TODO
+		// @ATTR event.hero_pos_id|int|Identifier for an alternate hero spawn point for intermap events. Values less than 1 are ignored.
 		e->type = EventComponent::HERO_POS_ID;
 
 		e->data[0].Int = Parse::popFirstInt(val);
+		if (e->data[0].Int < 1)
+			e->data[0].Int = 0;
 	}
 	else {
 		return false;
