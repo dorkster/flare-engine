@@ -936,10 +936,7 @@ int Map::procGenCreatePath(int path_type, int desired_length, int* _door_count, 
 	if (path_type == PATH_MAIN)
 		current->type = Chunk::TYPE_START;
 
-	int steps = static_cast<int>((MAP_SIZE_X * MAP_SIZE_Y));
-
-	if (path_type == PATH_BRANCH)
-		steps = desired_length;
+	int steps = desired_length;
 
 	int door_count = 0;
 	int door_chance = 0;
@@ -948,14 +945,23 @@ int Map::procGenCreatePath(int path_type, int desired_length, int* _door_count, 
 	if (procgen_door_spacing_min > 0) {
 		door_min_dist = std::max(2, procgen_door_spacing_min);
 	}
-	int path_length = 0;
-	int branch_chance = 0;
+	int path_length = 1;
+	int branch_chance = 50;
 	int branch_count = 0;
-	int max_branches = 2;
+	int max_branches = procgen_branches_per_door_level_max;
 
 	while (steps >= 0) {
 		int link = rand() % Chunk::LINK_COUNT;
 		Chunk* prev = current;
+
+		int link_rotate = Chunk::LINK_COUNT;
+		while (current->links[link] && link_rotate > 0) {
+			link++;
+			if (link >= Chunk::LINK_COUNT) {
+				link = 0;
+			}
+			link_rotate--;
+		}
 
 		// if we're on a door chunk, we can only go in the direction opposite of the initial link
 		if (current->type == Chunk::TYPE_DOOR_NORTH_SOUTH && (link == Chunk::LINK_WEST || link == Chunk::LINK_EAST)) {
@@ -1046,7 +1052,7 @@ int Map::procGenCreatePath(int path_type, int desired_length, int* _door_count, 
 
 				if (current->type == Chunk::TYPE_NORMAL && branch_count < max_branches && rand() % 100 < branch_chance) {
 					procgen_branch_roots.push_back(Point(static_cast<int>(cur_x), static_cast<int>(cur_y)));
-					branch_chance = 0;
+					branch_chance = 50;
 					branch_count++;
 				}
 
@@ -1199,12 +1205,14 @@ void Map::procGenFillArea(const std::string& config_filename, const Rect& area) 
 	int gen_attempts = 0;
 	int door_count = 0;
 
+	int desired_main_path_length = Math::randBetween(main_path_length_min, main_path_length_max);
+
 	while ((main_path_length < main_path_length_min || main_path_length > main_path_length_max || (door_count == 0 && procgen_doors_max > 0)) && gen_attempts < main_path_attempts_max) {
-		main_path_length = procGenCreatePath(PATH_MAIN, main_path_length, &door_count, 0, 0);
+		main_path_length = procGenCreatePath(PATH_MAIN, desired_main_path_length, &door_count, 0, 0);
 
 		gen_attempts++;
 	}
-	printf("Main path length: %d. Generator attempts: %d\n", main_path_length, gen_attempts);
+	Utils::logInfo("Map: Generated main path with length=%d and branches=%lu. Generator attempts: %d", main_path_length, procgen_branch_roots.size(), gen_attempts);
 
 	for (size_t i = 0; i < procgen_branch_roots.size(); ++i) {
 		int branch_length = Math::randBetween(branch_length_min, std::min(branch_length_min, branch_length_max));
@@ -1234,7 +1242,7 @@ void Map::procGenFillArea(const std::string& config_filename, const Rect& area) 
 			break;
 
 		if (normal_chunks[i].empty()) {
-			// printf("Tried to place key, but no chunks on current door level: %d\n", i);
+			Utils::logError("Map: Generator tried to place key, but no chunks on current door level: %d", i);
 			continue;
 		}
 
