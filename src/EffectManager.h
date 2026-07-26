@@ -100,6 +100,8 @@ public:
 	std::string attack_speed_anim;
 	bool is_multiplier;
 	bool ignore_resist;
+	bool damage_is_typed;
+	size_t damage_type;
 };
 
 class EffectDef {
@@ -119,6 +121,8 @@ public:
 	uint8_t alpha_mod;
 	std::string attack_speed_anim;
 	bool ignore_resist;
+	bool damage_is_typed;
+	size_t damage_type;
 
 	bool is_immunity_type; // handling of deprecated types
 };
@@ -179,10 +183,13 @@ public:
 	bool death_sentence;
 	bool fear;
 	float knockback_speed;
+	bool damage_is_typed;
 
 	std::vector<float> bonus;
 	std::vector<float> bonus_multiplier;
 	std::vector<int> bonus_primary;
+	std::vector<float> typed_damage;
+	std::vector<float> typed_damage_percent;
 
 	// TODO convert to array
 	bool triggered_others;

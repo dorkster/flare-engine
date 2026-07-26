@@ -300,6 +300,20 @@ void PowerManager::loadEffects() {
 			// @ATTR effect.ignore_resist|bool|If true, this effect will ignore the target's effect resistance stats (not to be confused with elemental/damage type resistances).
 			current->ignore_resist = Parse::toBool(infile.val);
 		}
+		else if (infile.key == "damage_type") {
+			// @ATTR effect.damage_type|predefined_string|Only applies to damage and damage_percent effects. The ID from engine/damage_types.txt that defines what type damage this effect will do.
+			current->damage_is_typed = false;
+			for (size_t i = 0; i < eset->damage_types.list.size(); ++i) {
+				if (eset->damage_types.list[i].id == infile.val) {
+					current->damage_type = i;
+					current->damage_is_typed = true;
+					break;
+				}
+			}
+			if (!current->damage_is_typed) {
+				infile.error("PowerManager: '%s' is not a known damage type.", infile.val.c_str());
+			}
+		}
 		else {
 			infile.error("PowerManager: '%s' is not a valid key.", infile.key.c_str());
 		}

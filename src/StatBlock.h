@@ -132,6 +132,8 @@ public:
 	float getDamageResist(size_t dmg_type) const;
 	float getResourceStat(size_t resource_index, size_t field_offset) const;
 
+	float applyResistToDamage(size_t dmg_type, float damage);
+
 	void checkGFXPaths();
 
 	bool alive;

@@ -1120,7 +1120,7 @@ void StatBlock::logic() {
 
 	// HP regen
 	if (hp <= get(Stats::HP_MAX) && hp > 0) {
-		float hp_regen_per_frame;
+		float hp_regen_per_frame = 0;
 		if (!in_combat && !hero_ally && !hero && pc->stats.alive) {
 			if (resting_hp_regen_seconds > 0) {
 				// enemies heal rapidly (full heal in 5 seconds) while not in combat
@@ -1157,18 +1157,46 @@ void StatBlock::logic() {
 	if (transform_duration > 0)
 		transform_duration--;
 
-	// apply bleed
-	if (effects.damage > 0 && hp > 0) {
-		float damage = effects.damage;
-		damage = eset->combat.resourceRound(damage);
-		takeDamage(damage, !StatBlock::TAKE_DMG_CRIT, effects.getDamageSourceType(Effect::DAMAGE));
-		comb->addFloat(damage, pos, CombatText::MSG_TAKEDMG);
-	}
-	if (effects.damage_percent > 0 && hp > 0) {
-		float damage = (get(Stats::HP_MAX) * effects.damage_percent) / 100;
-		damage = eset->combat.resourceRound(damage);
-		takeDamage(damage, !StatBlock::TAKE_DMG_CRIT, effects.getDamageSourceType(Effect::DAMAGE_PERCENT));
-		comb->addFloat(damage, pos, CombatText::MSG_TAKEDMG);
+	// apply damage over time (DOT)
+	if (hp > 0) {
+		float damage_for_text = 0;
+		// apply neutral DOT
+		if (effects.damage > 0) {
+			float damage = effects.damage;
+			damage = eset->combat.resourceRound(damage);
+			takeDamage(damage, !StatBlock::TAKE_DMG_CRIT, effects.getDamageSourceType(Effect::DAMAGE));
+			damage_for_text += damage;
+		}
+		if (effects.damage_percent > 0) {
+			float damage = (get(Stats::HP_MAX) * effects.damage_percent) / 100;
+			damage = eset->combat.resourceRound(damage);
+			takeDamage(damage, !StatBlock::TAKE_DMG_CRIT, effects.getDamageSourceType(Effect::DAMAGE_PERCENT));
+			damage_for_text += damage;
+		}
+		if (effects.damage > 0 || effects.damage_percent > 0) {
+			comb->addFloat(damage_for_text, pos, CombatText::MSG_TAKEDMG);
+		}
+
+		// apply DOT by damage type
+		// TODO different combat text color per damage type?
+		for (size_t i = 0; i < effects.typed_damage.size(); ++i) {
+			damage_for_text = 0;
+			if (effects.typed_damage[i] > 0) {
+				float damage = applyResistToDamage(i, effects.typed_damage[i]);
+				damage = eset->combat.resourceRound(damage);
+				takeDamage(damage, !StatBlock::TAKE_DMG_CRIT, effects.getDamageSourceType(Effect::DAMAGE));
+				damage_for_text += damage;
+			}
+			if (effects.typed_damage_percent[i] > 0) {
+				float damage = applyResistToDamage(i, (get(Stats::HP_MAX) * effects.typed_damage_percent[i]) / 100);
+				damage = eset->combat.resourceRound(damage);
+				takeDamage(damage, !StatBlock::TAKE_DMG_CRIT, effects.getDamageSourceType(Effect::DAMAGE_PERCENT));
+				damage_for_text += damage;
+			}
+			if (effects.typed_damage[i] > 0 || effects.typed_damage_percent[i] > 0) {
+				comb->addFloat(damage_for_text, pos, CombatText::MSG_TAKEDMG);
+			}
+		}
 	}
 
 	if(effects.death_sentence)
@@ -1591,6 +1619,21 @@ float StatBlock::getResourceStat(size_t resource_index, size_t field_offset) con
 	return current[offset_index + (resource_index*4) + field_offset];
 }
 
+float StatBlock::applyResistToDamage(size_t dmg_type, float damage) {
+	float resist = getDamageResist(dmg_type);
+	float damage_out = damage;
+
+	// resist values < 0 are weakness, and are unaffected by min/max resist setting
+	if (resist >= 0) {
+		if (resist < eset->combat.min_resist)
+			resist = eset->combat.min_resist;
+		if (resist > eset->combat.max_resist)
+			resist = eset->combat.max_resist;
+	}
+
+	return (damage_out * (100-resist)) / 100;
+}
+
 void StatBlock::checkGFXPaths() {
 	// try fallbacks if unable to find gfx_base
 	if (mods->list("animations/avatar/" + gfx_base, !ModManager::LIST_FULL_PATHS).empty()) {
@@ -1610,3 +1653,4 @@ void StatBlock::checkGFXPaths() {
 		}
 	}
 }
+

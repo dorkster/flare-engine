@@ -49,6 +49,8 @@ EffectDef::EffectDef()
 	, alpha_mod(255)
 	, attack_speed_anim("")
 	, ignore_resist(false)
+	, damage_is_typed(false)
+	, damage_type(0)
 	, is_immunity_type(false) {
 }
 
@@ -81,7 +83,9 @@ Effect::Effect()
 	, alpha_mod(255)
 	, attack_speed_anim("")
 	, is_multiplier(false)
-	, ignore_resist(false) {
+	, ignore_resist(false)
+	, damage_is_typed(false)
+	, damage_type(0) {
 }
 
 Effect::Effect(const Effect& other) {
@@ -117,6 +121,8 @@ Effect& Effect::operator=(const Effect& other) {
 	attack_speed_anim = other.attack_speed_anim;
 	is_multiplier = other.is_multiplier;
 	ignore_resist = other.ignore_resist;
+	damage_is_typed = other.damage_is_typed;
+	damage_type = other.damage_type;
 
 	return *this;
 }
@@ -326,6 +332,8 @@ EffectManager::EffectManager()
 	, bonus(Stats::COUNT + eset->damage_types.count + eset->resource_stats.stat_effect_count, 0)
 	, bonus_multiplier(bonus.size(), 1)
 	, bonus_primary(eset->primary_stats.list.size(), 0)
+	, typed_damage(eset->damage_types.list.size(), 0)
+	, typed_damage_percent(eset->damage_types.list.size(), 0)
 	, triggered_others(false)
 	, triggered_block(false)
 	, triggered_hit(false)
@@ -333,7 +341,8 @@ EffectManager::EffectManager()
 	, triggered_joincombat(false)
 	, triggered_death(false)
 	, triggered_active_power(false)
-	, refresh_stats(false) {
+	, refresh_stats(false)
+{
 	clearStatus();
 }
 
@@ -368,6 +377,11 @@ void EffectManager::clearStatus() {
 		resource_ot[i] = 0;
 		resource_ot_percent[i] = 0;
 	}
+
+	for (size_t i = 0; i < typed_damage.size(); ++i) {
+		typed_damage[i] = 0;
+		typed_damage_percent[i] = 0;
+	}
 }
 
 void EffectManager::logic() {
@@ -395,9 +409,23 @@ void EffectManager::logic() {
 		bool do_timed_effect = ei.timer.isWholeSecond() || (ei.timer.getDuration() < settings->max_frames_per_sec && ei.timer.isBegin());
 
 		// @TYPE damage|Damage per second
-		if (ei.type == Effect::DAMAGE && do_timed_effect) damage += ei.magnitude;
+		if (ei.type == Effect::DAMAGE && do_timed_effect) {
+			if (!ei.damage_is_typed) {
+				damage += ei.magnitude;
+			}
+			else {
+				typed_damage[ei.damage_type] += ei.magnitude;
+			}
+		}
 		// @TYPE damage_percent|Damage per second (percentage of max HP)
-		else if (ei.type == Effect::DAMAGE_PERCENT && do_timed_effect) damage_percent += ei.magnitude;
+		else if (ei.type == Effect::DAMAGE_PERCENT && do_timed_effect) {
+			if (!ei.damage_is_typed) {
+				damage_percent += ei.magnitude;
+			}
+			else {
+				typed_damage_percent[ei.damage_type] += ei.magnitude;
+			}
+		}
 		// @TYPE hpot|HP restored per second
 		else if (ei.type == Effect::HPOT && do_timed_effect) hpot += ei.magnitude;
 		// @TYPE hpot_percent|HP restored per second (percentage of max HP)
@@ -608,6 +636,8 @@ void EffectManager::addEffect(StatBlock* stats, EffectDef &effect, EffectParams 
 	e.alpha_mod = effect.alpha_mod;
 	e.attack_speed_anim = effect.attack_speed_anim;
 	e.ignore_resist = effect.ignore_resist;
+	e.damage_is_typed = effect.damage_is_typed;
+	e.damage_type = effect.damage_type;
 
 	if (!effect.animation.empty()) {
 		e.loadAnimation(effect.animation);

@@ -424,19 +424,7 @@ bool Entity::takeHit(Hazard &h) {
 				dmg_part = Math::randBetweenF(h.power->mod_damage_value_min, h.power->mod_damage_value_max);
 		}
 
-		// apply resistance
-		float resist = stats.getDamageResist(i);
-		// resist values < 0 are weakness, and are unaffected by min/max resist setting
-		if (resist >= 0) {
-			if (resist < eset->combat.min_resist)
-				resist = eset->combat.min_resist;
-			if (resist > eset->combat.max_resist)
-				resist = eset->combat.max_resist;
-		}
-
-		dmg_part = (dmg_part * (100-resist)) / 100;
-
-		dmg += dmg_part;
+		dmg += stats.applyResistToDamage(i, dmg_part);
 	}
 
 	if (!h.power->trait_armor_penetration) { // armor penetration ignores all absorption
