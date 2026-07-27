@@ -31,6 +31,7 @@ Engine features:
 	- Added support for renaming "Magical Shield" and "Healing" in power tooltips to menus/powers.txt config.
 	- Fixed healing power tooltip showing min and max amount when both are equal.
 	- Shield effects now display time remaining (if the effect has a duration) in their active effect icon tooltip.
+	- Tooltips for Character menu upgrade buttons now show bonuses that will be applied to minor stats.
 
 * System
 	- Add "Minimum Render Size" video setting.

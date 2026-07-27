@@ -37,6 +37,7 @@ FLARE.  If not, see http://www.gnu.org/licenses/
 #include "SoundManager.h"
 #include "StatBlock.h"
 #include "TooltipManager.h"
+#include "Utils.h"
 #include "UtilsParsing.h"
 #include "WidgetButton.h"
 #include "WidgetListBox.h"
@@ -768,7 +769,7 @@ void MenuCharacter::logic() {
 		for (size_t i = 0; i < eset->primary_stats.list.size(); ++i) {
 			if (pc->stats.primary[i] < pc->stats.max_points_per_stat && !cstat[i+2].label->isHidden()) {
 				upgradeButton[i]->enabled = true;
-				upgradeButton[i]->tooltip = msg->getv("Upgrade Stat: %s\nUses 1 Stat Point", eset->primary_stats.list[i].name.c_str());
+				upgradeButton[i]->tooltip = getUpgradeButtonTooltip(i);
 				tablist.add(upgradeButton[i]);
 			}
 			else {
@@ -926,6 +927,104 @@ void MenuCharacter::parseShowStat(FileParser& infile) {
 	else if (stat_name == "attack_speed") {
 		show_stat[offset_index + 1] = value;
 	}
+}
+
+std::string MenuCharacter::getUpgradeButtonTooltip(size_t primary_index) {
+	std::string tooltip = msg->getv("Upgrade Stat: %s\nUses 1 Stat Point", eset->primary_stats.list[primary_index].name.c_str());
+
+	bool have_bonus = false;
+	size_t resource_stat_offset = Stats::COUNT + eset->damage_types.count;
+
+	for (int i = 0; i < Stats::COUNT; ++i) {
+		// insert resource stats (execpt stealing) before accuracy
+		if (i == Stats::ACCURACY) {
+			for (size_t k = 0; k < eset->resource_stats.list.size(); ++k) {
+				for (size_t l = 0; l < EngineSettings::ResourceStats::STAT_STEAL; ++l) {
+					size_t resource_index = resource_stat_offset + (k * EngineSettings::ResourceStats::STAT_COUNT) + l;
+
+					if (base_bonus[primary_index]->at(resource_index) > 0 && show_stat[resource_index]) {
+						if (!have_bonus) {
+							tooltip += "\n";
+							have_bonus = true;
+						}
+						tooltip += "\n+" + Utils::floatToString(pc->stats.per_primary[primary_index][resource_index], eset->number_format.character_menu);
+						tooltip += " " + eset->resource_stats.list[k].text[l];
+					}
+				}
+			}
+		}
+
+		// damage types are displayed before absorb
+		if (i == Stats::ABS_MIN) {
+			for (size_t k = 0; k < eset->damage_types.list.size(); ++k) {
+				// damage min
+				size_t damage_min_index = Stats::COUNT + eset->damage_types.indexToMin(k);
+
+				if (base_bonus[primary_index]->at(damage_min_index) > 0 && show_stat[damage_min_index]) {
+					if (!have_bonus) {
+						tooltip += "\n";
+						have_bonus = true;
+					}
+					tooltip += "\n+" + Utils::floatToString(pc->stats.per_primary[primary_index][damage_min_index], eset->number_format.character_menu);
+					tooltip += " " + eset->damage_types.list[k].name_min;
+				}
+
+				// damage max
+				size_t damage_max_index = Stats::COUNT + eset->damage_types.indexToMax(k);
+
+				if (base_bonus[primary_index]->at(damage_max_index) > 0 && show_stat[damage_max_index]) {
+					if (!have_bonus) {
+						tooltip += "\n";
+						have_bonus = true;
+					}
+					tooltip += "\n+" + Utils::floatToString(pc->stats.per_primary[primary_index][damage_max_index], eset->number_format.character_menu);
+					tooltip += " " + eset->damage_types.list[k].name_max;
+				}
+			}
+		}
+
+		// non-damage bonuses
+		if (base_bonus[primary_index]->at(i) > 0 && show_stat[i]) {
+			if (!have_bonus) {
+				tooltip += "\n";
+				have_bonus = true;
+			}
+			tooltip += "\n+" + Utils::floatToString(pc->stats.per_primary[primary_index][i], eset->number_format.character_menu);
+			tooltip += " " + Stats::NAME[i];
+		}
+	}
+
+	// insert resource stealing stats after MP steal
+	for (size_t i = 0; i < eset->resource_stats.list.size(); ++i) {
+		for (size_t k = EngineSettings::ResourceStats::STAT_STEAL; k < EngineSettings::ResourceStats::STAT_COUNT; ++k) {
+			size_t resource_index = resource_stat_offset + (i * EngineSettings::ResourceStats::STAT_COUNT) + k;
+
+			if (base_bonus[primary_index]->at(resource_index) > 0 && show_stat[resource_index]) {
+				if (!have_bonus) {
+					tooltip += "\n";
+					have_bonus = true;
+				}
+				tooltip += "\n+" + Utils::floatToString(pc->stats.per_primary[primary_index][resource_index], eset->number_format.character_menu);
+				tooltip += " " + eset->resource_stats.list[i].text[k];
+			}
+		}
+	}
+
+	// resistances
+	for (size_t i = 0; i < eset->damage_types.list.size(); ++i) {
+		size_t resist_index = Stats::COUNT + eset->damage_types.indexToResist(i);
+
+		if (base_bonus[primary_index]->at(resist_index) > 0 && show_stat[resist_index]) {
+			if (!have_bonus) {
+				tooltip += "\n";
+				have_bonus = true;
+			}
+			tooltip += "\n+" + Utils::floatToString(pc->stats.per_primary[primary_index][resist_index], eset->number_format.character_menu);
+			tooltip += " " + eset->damage_types.list[i].name_resist;
+		}
+	}
+
+	return tooltip;
 }
 
 MenuCharacter::~MenuCharacter() {

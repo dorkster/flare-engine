@@ -70,6 +70,7 @@ private:
 	std::string resourceStatTooltip(size_t resource_index, size_t stat_index);
 	bool checkSkillPoints();
 	void parseShowStat(FileParser &infile);
+	std::string getUpgradeButtonTooltip(size_t primary_index);
 
 	int skill_points;
 	std::vector<bool> primary_up;
