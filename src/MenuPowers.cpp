@@ -1110,9 +1110,15 @@ void MenuPowers::createTooltip(TooltipData* tip_data, MenuPowersCell* pcell, Pow
 		}
 		else if (effect_type == Effect::DAMAGE) {
 			ss << Utils::floatToString(pwr->post_effects[i].magnitude, eset->number_format.power_tooltips) << " " << msg->get("Damage per second");
+			if (effect_ptr && effect_ptr->damage_is_typed) {
+				ss << " (" << eset->damage_types.list[effect_ptr->damage_type].name << ")";
+			}
 		}
 		else if (effect_type == Effect::DAMAGE_PERCENT) {
 			ss << Utils::floatToString(pwr->post_effects[i].magnitude, eset->number_format.power_tooltips) << "% " << msg->get("Damage per second");
+			if (effect_ptr && effect_ptr->damage_is_typed) {
+				ss << " (" << eset->damage_types.list[effect_ptr->damage_type].name << ")";
+			}
 		}
 		else if (effect_type == Effect::HPOT) {
 			ss << Utils::floatToString(pwr->post_effects[i].magnitude, eset->number_format.power_tooltips) << " " << msg->get("HP per second");
