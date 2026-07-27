@@ -99,18 +99,21 @@ In addition, there is a `mods` directory in this location, which can be used to 
 
 ## Command-line Flags
 
-| Flag              | Description
-|-------------------|----------------
-| `--help`          | Prints the list of command-line flags.
-| `--version`       | Prints the release version.
-| `--data-path`     | Specifies an exact path to look for mod data.
-| `--debug-event`   | Prints verbose hardware input information.
-| `--renderer`      | Specifies the rendering backend to use. The default is 'sdl\_hardware'. Also available is 'sdl', which is a software-based renderer.
-| `--no-audio`      | Disables sound effects and music.
-| `--mods`          | Starts the game with only these mods enabled.
-| `--load-slot`     | Loads a save slot by numerical index.
-| `--load-script`   | Execute's a script upon loading a saved game. The script path is mod-relative.
-| `--safe-video`    | Launches with the minimum video settings.
+| Flag                 | Description
+|----------------------|----------------
+| `--help`             | Prints the list of command-line flags.
+| `--version`          | Prints the release version.
+| `--data-path`        | Specifies an exact path to look for mod data.
+| `--save-data-path`   | Saves the path specified with --data-path to the user's config.
+| `--clear-data-path`  | Removes the saved data-path from the user's config.
+| `--ignore-data-path` | Temporarily ignores any saved data-path in the user's config.
+| `--debug-event`      | Prints verbose hardware input information.
+| `--renderer`         | Specifies the rendering backend to use. The default is 'sdl\_hardware'. Also available is 'sdl', which is a software-based renderer.
+| `--no-audio`         | Disables sound effects and music.
+| `--mods`             | Starts the game with only these mods enabled.
+| `--load-slot`        | Loads a save slot by numerical index.
+| `--load-script`      | Execute's a script upon loading a saved game. The script path is mod-relative.
+| `--safe-video`       | Launches with the minimum video settings.
 
 
 ## flare-engine Translation Status

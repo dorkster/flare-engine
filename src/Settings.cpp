@@ -51,6 +51,7 @@ Settings::Settings()
 	, custom_path_data("")
 	, custom_path_data_clear(false)
 	, custom_path_data_save(false)
+	, custom_path_data_ignore(false)
 	, game("")
 	, load_slot("")
 	, load_script("")
@@ -280,7 +281,7 @@ void Settings::setCustomPathData() {
 
 	bool write_file = false;
 
-	if (custom_path_data.empty()) {
+	if (custom_path_data.empty() && !custom_path_data_ignore) {
 		// --data-path command line flag not used, so try loading the saved custom_path_data from config
 
 		std::ifstream infile;

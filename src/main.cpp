@@ -373,6 +373,9 @@ int main(int argc, char *argv[]) {
 		else if (arg == "clear-data-path") {
 			settings->custom_path_data_clear = true;
 		}
+		else if (arg == "ignore-data-path") {
+			settings->custom_path_data_ignore = true;
+		}
 		else if (arg == "version") {
 			Utils::logInfo("%s", VersionInfo::createVersionStringFull().c_str());
 			done = true;
@@ -404,7 +407,8 @@ int main(int argc, char *argv[]) {
 --version                Prints the release version.\n\
 --data-path=<PATH>       Specifies an exact path to look for mod data.\n\
 --save-data-path         Saves the path specified with --data-path to the user's config.\n\
---clear-data-path        Removes a saved data-path from the user's config.\n\
+--clear-data-path        Removes the saved data-path from the user's config.\n\
+--ignore-data-path       Temporarily ignores any saved data-path in the user's config.\n\
 --debug-event            Prints verbose hardware input information.\n\
 --renderer=<RENDERER>    Specifies the rendering backend to use.\n\
                          The default is 'sdl'.\n\

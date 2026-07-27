@@ -151,6 +151,7 @@ public:
 	std::string custom_path_data; // user-defined replacement for PATH_DATA
 	bool custom_path_data_clear;
 	bool custom_path_data_save;
+	bool custom_path_data_ignore;
 	std::string game; // if set, a sub-dir will be used in PATH_CONF. The config menu's mod list will also be filtered to match.
 
 	// Command-line settings
