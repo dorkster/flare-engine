@@ -1769,7 +1769,18 @@ bool PowerManager::repeater(PowerID power_index, StatBlock *src_stats, const FPo
 	speed.x = repeater_speed * cosf(theta);
 	speed.y = repeater_speed * sinf(theta);
 
-	location_iterator = origin;
+	if (power->starting_pos == Power::STARTING_POS_SOURCE) {
+		location_iterator = origin;
+	}
+	else if (power->starting_pos == Power::STARTING_POS_TARGET) {
+		location_iterator = Utils::clampDistance(0, power->target_range, origin, target);
+	}
+	else if (power->starting_pos == Power::STARTING_POS_MELEE) {
+		location_iterator = Utils::calcVector(origin, src_stats->direction, src_stats->melee_range);
+	}
+	else if (power->starting_pos == Power::STARTING_POS_MELEE_UNLOCKED) {
+		location_iterator = Utils::clampDistance(src_stats->melee_range, src_stats->melee_range, origin, target);
+	}
 
 	Hazard* parent_haz = NULL;
 	bool first_hit_wall = false;

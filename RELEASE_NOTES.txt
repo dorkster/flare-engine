@@ -55,6 +55,9 @@ Engine fixes:
 	- Enemy/ally power chance is now a float, just like chance_pursue and chance_flee.
 	- Fixed a bug where uninitalized memory could cause HP regen to behave incorrectly.
 
+* Powers
+	- Fixed repeater powers not respecting the 'starting_pos' property.
+
 * UI
 	- Fixed bug where player could change equipment mid-attack. Trying to switch equipment while attacking now simply resets the player to the 'stance' state.
 	- Fixed bug where an item wouldn't be returned to a vendor if the player moved away while dragging an item.
