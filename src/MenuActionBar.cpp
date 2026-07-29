@@ -408,14 +408,18 @@ void MenuActionBar::logic() {
 			}
 
 			//see if the slot should be greyed out
+			bool can_use_power = pc->stats.canUsePower(hotkeys_mod[i], !StatBlock::CAN_USE_PASSIVE);
 			slots[i]->enabled = pc->power_cooldown_timers[hotkeys_mod[i]]->isEnd()
 							  && pc->power_cast_timers[hotkeys_mod[i]]->isEnd()
-							  && pc->stats.canUsePower(hotkeys_mod[i], !StatBlock::CAN_USE_PASSIVE)
+							  && can_use_power
 							  && (twostep_slot == -1 || static_cast<unsigned>(twostep_slot) == i);
 
 			slots[i]->setIcon(power->icon, WidgetSlot::NO_OVERLAY);
 
-			if (!pc->power_cast_timers[hotkeys_mod[i]]->isEnd() && pc->power_cast_timers[hotkeys_mod[i]]->getDuration() > 0) {
+			if (!can_use_power) {
+				slots[i]->cooldown = 1;
+			}
+			else if (!pc->power_cast_timers[hotkeys_mod[i]]->isEnd() && pc->power_cast_timers[hotkeys_mod[i]]->getDuration() > 0) {
 				slots[i]->cooldown = static_cast<float>(pc->power_cast_timers[hotkeys_mod[i]]->getCurrent()) / static_cast<float>(pc->power_cast_timers[hotkeys_mod[i]]->getDuration());
 			}
 			else if (!pc->power_cooldown_timers[hotkeys_mod[i]]->isEnd() && pc->power_cooldown_timers[hotkeys_mod[i]]->getDuration() > 0) {
