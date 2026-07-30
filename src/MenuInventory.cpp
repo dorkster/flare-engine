@@ -1301,7 +1301,7 @@ void MenuInventory::applyEquipment() {
 	if (preview)
 		preview->loadGraphicsFromInventory(this);
 
-	if (pc->stats.cur_state == StatBlock::ENTITY_POWER || pc->stats.cur_state != StatBlock::ENTITY_BLOCK) {
+	if (pc->stats.cur_state == StatBlock::ENTITY_POWER) {
 		pc->stats.cur_state = StatBlock::ENTITY_STANCE;
 	}
 }
