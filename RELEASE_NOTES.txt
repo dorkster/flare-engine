@@ -66,6 +66,7 @@ Engine fixes:
 	- Fixed crash when unable to load save slot background image in the save selection menu.
 	- Fixed being able to swap equipment sets while paused.
 	- Fixed actionbar cooldowns animations showing when power wouldn't be able to be used for other reasons.
+	- Fixed crash in Powers menu when trying to load an invalid Power ID.
 
 * Sound
 	- Fix menu close sound effect not playing when closing Char/Inv/Pow/Log menu with the Cancel key.

@@ -394,6 +394,9 @@ void MenuPowers::loadTab(FileParser &infile) {
 }
 
 void MenuPowers::loadPower(FileParser &infile) {
+	if (power_cell.empty())
+		return;
+
 	MenuPowersCellGroup& cell_group = power_cell.back();
 
 	// base power cell storage hasn't been set up!
