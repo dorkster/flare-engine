@@ -846,7 +846,9 @@ void EngineSettings::DamageTypes::load() {
 
 	// For backwards-compatibility, load engine/elements.txt as damage types
 	// @CLASS EngineSettings: Elements|(Deprecated in v1.14.85, use engine/damage_types.txt instead) Description of engine/elements.txt
-	if (infile.open("engine/elements.txt", FileParser::MOD_FILE, FileParser::ERROR_NORMAL)) {
+	if (infile.open("engine/elements.txt", FileParser::MOD_FILE, FileParser::ERROR_NONE)) {
+		Utils::logInfo("EngineSettings: Found deprecated file engine/elements.txt. Please use engine/damage_types.txt instead!");
+
 		while (infile.next()) {
 			if (infile.new_section) {
 				if (infile.section == "element") {
