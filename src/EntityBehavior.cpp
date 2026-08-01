@@ -226,6 +226,10 @@ void EntityBehavior::findTarget() {
 	if (e->stats.join_combat) {
 		e->stats.in_combat = true;
 
+		// we need to reset the los cooldown here to prevent getting stuck in the join_combat state
+		// this happens when the entity doesn't have los, but enters combat due to being hit (by a beacon or otherwise)
+		e->stats.cooldown_los.reset(Timer::BEGIN);
+
 		StatBlock::AIPower* ai_power;
 		if (!e->stats.hero_ally) {
 			ai_power = e->stats.getAIPower(StatBlock::AI_POWER_BEACON);
