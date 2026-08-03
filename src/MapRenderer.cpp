@@ -595,7 +595,6 @@ void MapRenderer::renderIsoFrontObjects(std::vector<Renderable> &r) {
 		Point p = Utils::mapToScreen(float(i), float(j), cam.shake.x, cam.shake.y);
 		p = centerTile(p);
 		const Map_Layer &current_layer = layers[index_objectlayer];
-		bool is_last_NE_tile = false;
 		while (j > j_end) {
 			--j;
 			++i;
@@ -688,7 +687,6 @@ void MapRenderer::renderIsoFrontObjects(std::vector<Renderable> &r) {
 			if (r_cursor == r_end)
 				continue;
 
-do_last_NE_tile:
 			// some renderable entities go in this layer
 
 			// calculate south/south-west tile bounds
@@ -704,7 +702,6 @@ do_last_NE_tile:
 			getTileBounds(i, static_cast<int_fast16_t>(j+1), current_layer, tile_E_bounds, tile_E_center);
 
 			bool draw_SW_tile = false;
-			bool draw_NE_tile = false;
 
 			while (r_cursor != r_end) {
 				// implicit floor by int cast
@@ -713,7 +710,6 @@ do_last_NE_tile:
 
 				if (r_cursor_x+1 == i && r_cursor_y-1 == j) {
 					draw_SW_tile = true;
-					draw_NE_tile = !is_last_NE_tile;
 
 					// r_cursor left/right side
 					Point r_cursor_left = Utils::mapToScreen(r_cursor->map_pos.x, r_cursor->map_pos.y, cam.shake.x, cam.shake.y);
@@ -742,7 +738,7 @@ do_last_NE_tile:
 					}
 
 					// check right of r_cursor
-					if (draw_NE_tile && Utils::isWithinRect(tile_E_bounds, r_cursor_left) && Utils::isWithinRect(tile_NE_bounds, r_cursor_right)) {
+					if (Utils::isWithinRect(tile_E_bounds, r_cursor_left) && Utils::isWithinRect(tile_NE_bounds, r_cursor_right)) {
 						is_behind_NE = true;
 					}
 
@@ -792,7 +788,7 @@ do_last_NE_tile:
 			}
 
 			// draw the north-east tile
-			if (draw_NE_tile && !draw_tile && !drawn_tiles[i][j]) {
+			if (!draw_tile && i < w && j < h && !drawn_tiles[i][j]) {
 				if (const uint_fast16_t current_tile = current_layer[i][j]) {
 					const Tile_Def &tile = tset.tiles[current_tile];
 					if (tile.tile) {
@@ -815,21 +811,6 @@ do_last_NE_tile:
 			while (!render_behind_none.empty()) {
 				drawRenderable(render_behind_none.front());
 				render_behind_none.pop();
-			}
-
-			// Okay, this is a bit of a HACK
-			// In order to properly render the first row and last column of the map, we need to advance to an imaginary tile
-			// Care must be taken in the code after the "do_last_NE_tile" goto label to avoid accessing map data with these coordinates
-			if (is_last_NE_tile) {
-				++j;
-				--i;
-				is_last_NE_tile = false;
-			}
-			else if (i == w-1 || j == 0) {
-				--j;
-				++i;
-				is_last_NE_tile = true;
-				goto do_last_NE_tile;
 			}
 		}
 		j = static_cast<int_fast16_t>(j + tiles_width);
