@@ -90,6 +90,12 @@ private:
 
 	std::vector<std::vector<Renderable>::iterator> hidden_entities;
 
+	// for isometric rendering
+	std::queue<std::vector<Renderable>::iterator> render_behind_SW;
+	std::queue<std::vector<Renderable>::iterator> render_behind_NE;
+	std::queue<std::vector<Renderable>::iterator> render_behind_none;
+	Map_Layer drawn_tiles;
+
 public:
 	typedef std::pair< std::vector<EventComponent>, Point> MapLoot;
 

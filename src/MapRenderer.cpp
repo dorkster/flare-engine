@@ -263,6 +263,8 @@ int MapRenderer::load(const std::string& fname) {
 
 	render_device->setBackgroundColor(background_color);
 
+	drawn_tiles = Map_Layer(w, std::vector<unsigned short>(h, 0));
+
 	return 0;
 }
 
@@ -555,11 +557,22 @@ void MapRenderer::renderIsoFrontObjects(std::vector<Renderable> &r) {
 	if (index_objectlayer >= layers.size())
 		return;
 
-	std::queue<std::vector<Renderable>::iterator> render_behind_SW;
-	std::queue<std::vector<Renderable>::iterator> render_behind_NE;
-	std::queue<std::vector<Renderable>::iterator> render_behind_none;
+	// these queues should always be empty at this point, so this probably isn't even needed.
+	while (!render_behind_SW.empty()) {
+		render_behind_SW.pop();
+	}
+	while (!render_behind_NE.empty()) {
+		render_behind_NE.pop();
+	}
+	while (!render_behind_none.empty()) {
+		render_behind_none.pop();
+	}
 
-	Map_Layer drawn_tiles(w, std::vector<unsigned short>(h, 0));
+	for (size_t dtw = 0; dtw < w; ++dtw) {
+		for (size_t dth = 0; dth < h; ++dth) {
+			drawn_tiles[dtw][dth] = 0;
+		}
+	}
 
 	for (uint_fast16_t y = max_tiles_height ; y; --y) {
 		int_fast16_t tiles_width = 0;
