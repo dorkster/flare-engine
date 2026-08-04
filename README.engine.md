@@ -148,6 +148,7 @@ In addition, there is a `mods` directory in this location, which can be used to 
 | Spanish (es)                  | 88%
 | Swedish (sv)                  | 88%
 | Thai (Thailand) (th\_TH)      | 49%
+| Turkish (tr)                  | 0%
 | Ukrainian (uk)                | 70%
 | Vietnamese (vi)               | 75%
 

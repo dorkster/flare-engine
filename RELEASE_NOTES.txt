@@ -89,7 +89,8 @@ Translation updates:
 * Finnish (fi) update (Jaakko Muilu)
 * Portuguese (Brazilian) (pt_BR) update (João Francisco Gauze Carrer)
 * Russian (ru) update (berry)
-* Chinese (Taiwan) (zh_TW) by Li Yang
+* Turkish (tr) by Fatih Polat
+* Chinese (Taiwan) (zh_TW) update (Li Yang)
 
 
 Flare v1.15 (https://flarerpg.org/2026/05/03/flare-1-15/)

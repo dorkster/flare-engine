@@ -34,6 +34,7 @@ ru=Русский
 sk=Slovenčina
 sv=Svenska
 th_TH=Thai
+tr=Türkçe
 uk=Українська
 vi=Tiếng Việt
 zh=Chinese
