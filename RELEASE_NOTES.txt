@@ -70,6 +70,7 @@ Engine fixes:
 
 * Sound
 	- Fix menu close sound effect not playing when closing Char/Inv/Pow/Log menu with the Cancel key.
+	- Fixed "no mana/resource" sound playing too rapidly in some cases.
 
 * System
 	- Fixed bug where window could be resized in a way in which menus wouldn't fit on screen.

@@ -275,7 +275,8 @@ void MenuActionBar::clearSlot(size_t slot) {
 	slot_item_count[slot] = -1;
 	locked[slot] = false;
 	slot_activated[slot] = false;
-	slot_fail_cooldown[slot] = 0;
+	slot_fail_cooldown[slot].setDuration(settings->max_frames_per_sec);
+	slot_fail_cooldown[slot].reset(Timer::END);
 
 	if (slots[slot]) {
 		slots[slot]->enabled = true;
@@ -436,8 +437,7 @@ void MenuActionBar::logic() {
 			slots[i]->setIcon(WidgetSlot::NO_ICON, WidgetSlot::NO_OVERLAY);
 		}
 
-		if (slot_fail_cooldown[i] > 0)
-			slot_fail_cooldown[i]--;
+		slot_fail_cooldown[i].tick();
 	}
 
 }
@@ -668,24 +668,24 @@ void MenuActionBar::checkAction(std::vector<ActionData> &action_queue) {
 			const Power* power = powers->powers[action.power];
 
 			bool not_enough_resources = false;
-			if (pc->stats.mp < power->requires_mp && slot_fail_cooldown[i] == 0) {
-				pc->logMsg(msg->get("Not enough MP."), Avatar::MSG_NORMAL);
-				not_enough_resources = true;
-			}
-			for (size_t j = 0; j < eset->resource_stats.list.size(); ++j) {
-				if (pc->stats.resource_stats[j] < power->requires_resource_stat[j] && slot_fail_cooldown[i] == 0) {
-					pc->logMsg(eset->resource_stats.list[j].text_log_low, Avatar::MSG_NORMAL);
+			if (slot_fail_cooldown[i].isEnd()) {
+				if (pc->stats.mp < power->requires_mp) {
+					pc->logMsg(msg->get("Not enough MP."), Avatar::MSG_NORMAL);
 					not_enough_resources = true;
+				}
+				for (size_t j = 0; j < eset->resource_stats.list.size(); ++j) {
+					if (pc->stats.resource_stats[j] < power->requires_resource_stat[j]) {
+						pc->logMsg(eset->resource_stats.list[j].text_log_low, Avatar::MSG_NORMAL);
+						not_enough_resources = true;
+					}
 				}
 			}
 
 			if (not_enough_resources) {
-				slot_fail_cooldown[i] = settings->max_frames_per_sec;
+				slot_fail_cooldown[i].reset(Timer::BEGIN);
 				snd->play(sfx_unable_to_cast, "ACT_NO_MP", snd->NO_POS, !snd->LOOP);
 				continue;
 			}
-
-			slot_fail_cooldown[i] = pc->power_cast_timers[action.power]->getDuration();
 
 			action.instant_item = false;
 			if (power->new_state == Power::STATE_INSTANT) {
@@ -733,6 +733,7 @@ void MenuActionBar::checkAction(std::vector<ActionData> &action_queue) {
 					pc->mm_target_object = Avatar::MM_TARGET_NONE;
 				}
 
+				slot_fail_cooldown[i].reset(Timer::BEGIN);
 				action_queue.push_back(action);
 			}
 		}

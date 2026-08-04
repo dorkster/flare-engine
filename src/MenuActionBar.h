@@ -57,7 +57,7 @@ private:
 
 	Point last_mouse;
 
-	std::vector<int> slot_fail_cooldown;
+	std::vector<Timer> slot_fail_cooldown;
 
 	SoundID sfx_unable_to_cast;
 
