@@ -2182,7 +2182,9 @@ code {
 
 <p><strong>power.complete_animation</strong> | <code>bool</code> | For hazards; Play the entire animation, even if the hazard has hit a target.</p>
 
-<p><strong>power.charge_speed</strong> | <code>float</code> | Moves the caster at this speed in the direction they are facing until the state animation is finished.</p>
+<p><strong>power.charge_speed</strong> | <code>float</code> | Moves the caster at this speed in the direction they are facing for the duration specified by charge_duration or until the state animation is finished (whichever is shorter).</p>
+
+<p><strong>power.charge_duration</strong> | <code>duration</code> | Defines how long the charge_speed is applied. If set to 0, this property is ignored and the state animation is used to set the duration.</p>
 
 <p><strong>power.attack_speed</strong> | <code>float</code> | Changes attack animation speed for this Power. A value of 100 is 100% speed (aka normal speed).</p>
 

@@ -135,6 +135,7 @@ Power::Power()
 	, transform_duration(0)
 	, target_neighbor(0)
 	, script_trigger(-1)
+	, charge_duration(0)
 
 	, requires_mp(0)
 	, requires_hp(0)
@@ -723,8 +724,12 @@ void PowerManager::loadPowers() {
 			power->complete_animation = Parse::toBool(infile.val);
 		}
 		else if (infile.key == "charge_speed") {
-			// @ATTR power.charge_speed|float|Moves the caster at this speed in the direction they are facing until the state animation is finished.
+			// @ATTR power.charge_speed|float|Moves the caster at this speed in the direction they are facing for the duration specified by charge_duration or until the state animation is finished (whichever is shorter).
 			power->charge_speed = Parse::toFloat(infile.val) / settings->max_frames_per_sec;
+		}
+		else if (infile.key == "charge_duration") {
+			// @ATTR power.charge_duration|duration|Defines how long the charge_speed is applied. If set to 0, this property is ignored and the state animation is used to set the duration.
+			power->charge_duration = Parse::toDuration(infile.val);
 		}
 		else if (infile.key == "attack_speed") {
 			// @ATTR power.attack_speed|float|Changes attack animation speed for this Power. A value of 100 is 100% speed (aka normal speed).

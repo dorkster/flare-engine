@@ -945,8 +945,10 @@ void Avatar::logic() {
 	if (stats.state_timer.isEnd() && stats.hold_state)
 		stats.hold_state = false;
 
-	if (stats.cur_state != StatBlock::ENTITY_POWER && stats.charge_speed != 0.0f)
+	if ((stats.cur_state != StatBlock::ENTITY_POWER || (stats.charge_timer.getDuration() > 0 && stats.charge_timer.isEnd())) && stats.charge_speed != 0.0f) {
 		stats.charge_speed = 0.0f;
+		stats.charge_timer.reset(Timer::END);
+	}
 }
 
 void Avatar::beginPower(PowerID replaced_id, FPoint* target) {
@@ -971,8 +973,16 @@ void Avatar::beginPower(PowerID replaced_id, FPoint* target) {
 	if (power->state_duration > 0)
 		stats.state_timer.setDuration(power->state_duration);
 
-	if (power->charge_speed != 0.0f)
+	if (power->charge_speed != 0.0f) {
 		stats.charge_speed = power->charge_speed;
+
+		if (power->charge_duration > 0) {
+			stats.charge_timer.setDuration(power->charge_duration);
+		}
+		else {
+			stats.charge_timer.setDuration(0);
+		}
+	}
 
 	stats.prevent_interrupt = power->prevent_interrupt;
 

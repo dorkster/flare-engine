@@ -217,6 +217,7 @@ public:
 
 	float speed;
 	float charge_speed;
+	Timer charge_timer;
 
 	std::set<size_t> equip_flags;
 

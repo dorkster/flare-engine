@@ -815,8 +815,16 @@ void EntityBehavior::updateState() {
 				if (epower->state_duration > 0)
 					e->stats.state_timer.setDuration(epower->state_duration);
 
-				if (epower->charge_speed != 0.0f)
+				if (epower->charge_speed != 0.0f) {
 					e->stats.charge_speed = epower->charge_speed;
+
+					if (epower->charge_duration > 0) {
+						e->stats.charge_timer.setDuration(epower->charge_duration);
+					}
+					else {
+						e->stats.charge_timer.setDuration(0);
+					}
+				}
 			}
 
 			if (epower->state_hold_mode == Power::HOLD_ON_FRAME) {
@@ -965,8 +973,10 @@ void EntityBehavior::updateState() {
 	if (e->stats.state_timer.isEnd() && e->stats.hold_state)
 		e->stats.hold_state = false;
 
-	if (e->stats.cur_state != StatBlock::ENTITY_POWER && e->stats.charge_speed != 0.0f)
+	if ((e->stats.cur_state != StatBlock::ENTITY_POWER || (e->stats.charge_timer.getDuration() > 0 && e->stats.charge_timer.isEnd())) && e->stats.charge_speed != 0.0f) {
 		e->stats.charge_speed = 0.0f;
+		e->stats.charge_timer.reset(Timer::END);
+	}
 }
 
 FPoint EntityBehavior::getWanderPoint() {

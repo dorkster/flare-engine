@@ -272,6 +272,7 @@ public:
 	int transform_duration;
 	int target_neighbor;
 	int script_trigger;
+	int charge_duration;
 
 	float requires_mp;
 	float requires_hp;

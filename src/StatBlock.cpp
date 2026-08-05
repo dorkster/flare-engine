@@ -1110,6 +1110,12 @@ void StatBlock::logic() {
 		}
 	}
 
+	// update timers
+	cooldown_hit.tick();
+	state_timer.tick();
+	charge_timer.tick();
+	waypoint_timer.tick();
+
 	// handle cooldowns
 	cooldown.tick(); // global cooldown
 	cooldown_los.tick();
@@ -1202,15 +1208,12 @@ void StatBlock::logic() {
 	if(effects.death_sentence)
 		takeDamage(get(Stats::HP_MAX), !StatBlock::TAKE_DMG_CRIT, Power::SOURCE_TYPE_NEUTRAL);
 
-	cooldown_hit.tick();
-
 	if (effects.stun) {
 		// stun stops charge attacks
 		state_timer.reset(Timer::END);
+		charge_timer.reset(Timer::END);
 		charge_speed = 0;
 	}
-
-	state_timer.tick();
 
 	// apply healing over time
 	if (effects.hpot > 0) {
@@ -1285,8 +1288,6 @@ void StatBlock::logic() {
 		mapr->collider.move(pos.x, pos.y, dx, dy, movement_type, mapr->collider.getCollideType(hero));
 		mapr->collider.block(pos.x, pos.y, hero_ally);
 	}
-
-	waypoint_timer.tick();
 
 	// check for revive
 	if (hp <= 0 && effects.revive) {
