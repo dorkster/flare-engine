@@ -662,7 +662,9 @@ void MenuManager::logic() {
 
 	// only allow the vendor window to be open if the inventory is open
 	if (vendor->visible && !(inv->visible)) {
-		snd->play(vendor->sfx_close, snd->DEFAULT_CHANNEL, snd->NO_POS, !snd->LOOP);
+		if (inv->sfx_close == 0) {
+			snd->play(vendor->sfx_close, snd->DEFAULT_CHANNEL, snd->NO_POS, !snd->LOOP);
+		}
 		closeAll();
 	}
 
@@ -714,11 +716,17 @@ void MenuManager::logic() {
 					snd->play(questlog->sfx_close, snd->DEFAULT_CHANNEL, snd->NO_POS, !snd->LOOP);
 				}
 				else {
-					if (inv->visible) {
+					if (inv->visible && inv->sfx_close != 0) {
 						snd->play(inv->sfx_close, snd->DEFAULT_CHANNEL, snd->NO_POS, !snd->LOOP);
 					}
 					else if (pow->visible) {
 						snd->play(pow->sfx_close, snd->DEFAULT_CHANNEL, snd->NO_POS, !snd->LOOP);
+					}
+					else if (vendor->visible) {
+						snd->play(vendor->sfx_close, snd->DEFAULT_CHANNEL, snd->NO_POS, !snd->LOOP);
+					}
+					else if (stash->visible) {
+						snd->play(stash->sfx_close, snd->DEFAULT_CHANNEL, snd->NO_POS, !snd->LOOP);
 					}
 				}
 				closeAll();

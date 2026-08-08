@@ -766,6 +766,9 @@ void GameStatePlay::checkStash() {
 		if (!menu->inv->visible) {
 			menu->resetDrag();
 			menu->stash->visible = false;
+			if (menu->inv->sfx_close == 0) {
+				snd->play(menu->stash->sfx_close, snd->DEFAULT_CHANNEL, snd->NO_POS, !snd->LOOP);
+			}
 		}
 
 		// If the player walks away from the stash, close its menu
@@ -773,6 +776,7 @@ void GameStatePlay::checkStash() {
 		if (interact_distance > eset->misc.interact_range || !pc->stats.alive) {
 			menu->resetDrag();
 			menu->stash->visible = false;
+			snd->play(menu->stash->sfx_close, snd->DEFAULT_CHANNEL, snd->NO_POS, !snd->LOOP);
 		}
 
 	}
@@ -1063,6 +1067,10 @@ bool GameStatePlay::isPaused() {
 }
 
 void GameStatePlay::resetNPC() {
+	if (menu->vendor->visible) {
+		snd->play(menu->vendor->sfx_close, snd->DEFAULT_CHANNEL, snd->NO_POS, !snd->LOOP);
+	}
+
 	npc_id = -1;
 	menu->talker->npc_from_map = true;
 	menu->resetDrag();
