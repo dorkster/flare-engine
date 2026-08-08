@@ -350,7 +350,8 @@ void MenuVendor::setNPC(NPC* _npc) {
 		stock[ItemManager::VENDOR_SELL][i] = buyback_stock[npc->filename][i];
 
 		stock[ItemManager::VENDOR_CRAFT][i] = npc->craft_stock[i];
-		stock[ItemManager::VENDOR_CRAFT][i].quantity = 1;
+		if (!npc->craft_stock[i].empty())
+			stock[ItemManager::VENDOR_CRAFT][i].quantity = 1;
 	}
 	npc->reset_buyback = false;
 
