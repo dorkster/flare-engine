@@ -21,6 +21,7 @@ Engine features:
 	- Added 'dispel' property to Powers.
 	- Added 'damage_type' property to Effects.
 	- Added 'charge_duration" property to Powers.
+	- Support id:quantity syntax for requires_item and requires_equipped_item.
 
 * Animations
 	- Add support for multiple images to uncompressed animations with AnimationSet property, 'animation.image'.

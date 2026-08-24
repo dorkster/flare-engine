@@ -520,27 +520,49 @@ void PowerManager::loadPowers() {
 		else if (infile.key == "requires_item") {
 			// @ATTR power.requires_item|repeatable(item_id, int) : Item, Quantity|Requires a specific item of a specific quantity in inventory. If quantity > 0, then the item will be removed.
 			PowerRequiredItem pri;
-			pri.id = items->verifyID(Parse::toItemID(Parse::popFirstString(infile.val)), &infile, !ItemManager::VERIFY_ALLOW_ZERO, !ItemManager::VERIFY_ALLOCATE);
-			if (pri.id > 0) {
-				pri.quantity = Parse::toInt(Parse::popFirstString(infile.val), 1);
-				pri.equipped = false;
+			pri.equipped = false;
+
+			bool check_pair = false;
+			ItemStack item_stack = Parse::toItemQuantityPair(Parse::popFirstString(infile.val), &check_pair);
+
+			if (!check_pair) {
+				item_stack.item = items->verifyID(item_stack.item, &infile, !ItemManager::VERIFY_ALLOW_ZERO, !ItemManager::VERIFY_ALLOCATE);
+				if (item_stack.item > 0) {
+					item_stack.quantity = Parse::toInt(Parse::popFirstString(infile.val), 1);
+				}
+			}
+
+			if (!item_stack.empty()) {
+				pri.id = item_stack.item;
+				pri.quantity = item_stack.quantity;
 				power->required_items.push_back(pri);
 			}
+
 		}
 		else if (infile.key == "requires_equipped_item") {
 			// @ATTR power.requires_equipped_item|repeatable(item_id, int) : Item, Quantity|Requires a specific item of a specific quantity to be equipped on hero. If quantity > 0, then the item will be removed.
 			PowerRequiredItem pri;
-			pri.id = items->verifyID(Parse::toItemID(Parse::popFirstString(infile.val)), &infile, !ItemManager::VERIFY_ALLOW_ZERO, !ItemManager::VERIFY_ALLOCATE);
-			if (pri.id > 0) {
-				pri.quantity = Parse::popFirstInt(infile.val);
-				pri.equipped = true;
+			pri.equipped = true;
 
+			bool check_pair = false;
+			ItemStack item_stack = Parse::toItemQuantityPair(Parse::popFirstString(infile.val), &check_pair);
+
+			if (!check_pair) {
+				item_stack.item = items->verifyID(item_stack.item, &infile, !ItemManager::VERIFY_ALLOW_ZERO, !ItemManager::VERIFY_ALLOCATE);
+				if (item_stack.item > 0) {
+					item_stack.quantity = Parse::toInt(Parse::popFirstString(infile.val), 1);
+				}
+			}
+
+			if (!item_stack.empty()) {
 				// a maximum of 1 equipped item can be consumed at a time
-				if (pri.quantity > 1) {
+				if (item_stack.quantity > 1) {
 					infile.error("PowerManager: Only 1 equipped item can be consumed at a time.");
-					pri.quantity = std::min(pri.quantity, 1);
+					item_stack.quantity = 1;
 				}
 
+				pri.id = item_stack.item;
+				pri.quantity = item_stack.quantity;
 				power->required_items.push_back(pri);
 			}
 		}
