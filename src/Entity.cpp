@@ -44,6 +44,7 @@ FLARE.  If not, see http://www.gnu.org/licenses/
 #include "SharedGameResources.h"
 #include "SharedResources.h"
 #include "SoundManager.h"
+#include "Stats.h"
 #include "UtilsMath.h"
 
 #include <cassert>
@@ -427,9 +428,10 @@ bool Entity::takeHit(Hazard &h) {
 		dmg += stats.applyResistToDamage(i, dmg_part);
 	}
 
+	float absorption = 0;
 	if (!h.power->trait_armor_penetration) { // armor penetration ignores all absorption
 		// subtract absorption from armor
-		float absorption = Math::randBetweenF(stats.get(Stats::ABS_MIN), stats.get(Stats::ABS_MAX));
+		absorption = Math::randBetweenF(stats.get(Stats::ABS_MIN), stats.get(Stats::ABS_MAX));
 
 		if (absorption > 0 && dmg > 0) {
 			float base_absorb = absorption;
@@ -675,12 +677,23 @@ bool Entity::takeHit(Hazard &h) {
 
 		// don't go through a hit animation if stunned or successfully poised
 		// however, critical hits ignore poise
-		bool chance_poise = Math::percentChanceF(stats.get(Stats::POISE));
+
+		bool poise_success = false;
+
+		if (eset->combat.poise_style == EngineSettings::Combat::POISE_STYLE_CHANCE) {
+			poise_success = Math::percentChanceF(stats.get(Stats::POISE));
+		}
+		else if (eset->combat.poise_style == EngineSettings::Combat::POISE_STYLE_HP && stats.get(Stats::HP_MAX) > 0) {
+			poise_success = (dmg / stats.get(Stats::HP_MAX)) * 100 <= stats.get(Stats::POISE);
+		}
+		else if (eset->combat.poise_style == EngineSettings::Combat::POISE_STYLE_ABSORB) {
+			poise_success = (absorption / dmg) * 100 > stats.get(Stats::POISE);
+		}
 
 		if(stats.cooldown_hit.isEnd()) {
 			stats.cooldown_hit.reset(Timer::BEGIN);
 
-			if (!stats.effects.stun && (!chance_poise || crit) && !stats.prevent_interrupt) {
+			if (!stats.effects.stun && (!poise_success || crit) && !stats.prevent_interrupt) {
 				if(stats.hero) {
 					stats.cur_state = StatBlock::ENTITY_HIT;
 				}

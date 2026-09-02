@@ -2,6 +2,9 @@ Flare v1.16
 
 Engine features:
 
+* Gameplay
+	- Added 'poise_style' property to engine/combat.txt config.
+
 * Items
 	- Added 'crafting_items' property to Items.
 

@@ -308,6 +308,8 @@ code {
 
 <p><strong>offscreen_enemy_encounters</strong> | <code>bool</code> | If true, enemies can enter combat even if they are off-screen. Defaults to false.</p>
 
+<p><strong>poise_style</strong> | <code>[chance, hp, absorb]</code> | Controls how the poise stat behaves. The default is "chance", which succeeds if a random roll is less than the target's poise value. The "hp" style succeeds if the ratio of damage taken to the target's maximum HP is less than or equal to the target's poise stat. The "absorb" style succeeds if the ratio of the target's calculated absorption to the damage taken is greater than the target's poise stat.</p>
+
 <hr />
 
 <h4>EngineSettings: Equip flags</h4>

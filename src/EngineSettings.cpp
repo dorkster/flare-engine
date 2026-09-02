@@ -363,6 +363,7 @@ void EngineSettings::Combat::load() {
 	max_overhit_damage = 100;
 	resource_round_method = EngineSettings::Combat::RESOURCE_ROUND_METHOD_ROUND;
 	offscreen_enemy_encounters = false;
+	poise_style = EngineSettings::Combat::POISE_STYLE_CHANCE;
 
 	FileParser infile;
 	// @CLASS EngineSettings: Combat|Description of engine/combat.txt
@@ -426,6 +427,18 @@ void EngineSettings::Combat::load() {
 			// @ATTR offscreen_enemy_encounters|bool|If true, enemies can enter combat even if they are off-screen. Defaults to false.
 			else if (infile.key == "offscreen_enemy_encounters") {
 				offscreen_enemy_encounters = Parse::toBool(infile.val);
+			}
+			// @ATTR poise_style|['chance', 'hp', 'absorb']|Controls how the poise stat behaves. The default is "chance", which succeeds if a random roll is less than the target's poise value. The "hp" style succeeds if the ratio of damage taken to the target's maximum HP is less than or equal to the target's poise stat. The "absorb" style succeeds if the ratio of the target's calculated absorption to the damage taken is greater than the target's poise stat.
+			else if (infile.key == "poise_style") {
+				if (infile.val == "chance") {
+					poise_style = EngineSettings::Combat::POISE_STYLE_CHANCE;
+				}
+				else if (infile.val == "hp") {
+					poise_style = EngineSettings::Combat::POISE_STYLE_HP;
+				}
+				else if (infile.val == "absorb") {
+					poise_style = EngineSettings::Combat::POISE_STYLE_ABSORB;
+				}
 			}
 
 			else infile.error("EngineSettings: '%s' is not a valid key.", infile.key.c_str());

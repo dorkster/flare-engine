@@ -112,6 +112,12 @@ public:
 			RESOURCE_ROUND_METHOD_CEIL
 		};
 
+		enum {
+			POISE_STYLE_CHANCE = 0,
+			POISE_STYLE_HP,
+			POISE_STYLE_ABSORB,
+		};
+
 		float min_absorb;
 		float max_absorb;
 		float min_resist;
@@ -128,6 +134,7 @@ public:
 		float max_overhit_damage;
 		unsigned short resource_round_method;
 		bool offscreen_enemy_encounters;
+		unsigned short poise_style;
 	};
 
 	class EquipFlags {
