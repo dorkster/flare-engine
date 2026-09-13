@@ -1847,6 +1847,8 @@ int Item::getCraftCount() {
 		craft_count = std::min(craft_count, item_count / stack.quantity);
 	}
 
+	craft_count = std::min(craft_count, max_quantity);
+
 	return craft_count;
 }
 
