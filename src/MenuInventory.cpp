@@ -1583,10 +1583,20 @@ int MenuInventory::getMaxPurchasable(ItemStack item, int vendor_tab) {
 	if (!items->isValid(item.item))
 		return 0;
 
-	if (vendor_tab == ItemManager::VENDOR_BUY)
-		return currency / items->items[item.item]->getPrice(ItemManager::USE_VENDOR_RATIO);
-	else if (vendor_tab == ItemManager::VENDOR_SELL)
-		return currency / items->items[item.item]->getSellPrice(item.can_buyback);
+	if (vendor_tab == ItemManager::VENDOR_BUY) {
+		int price = items->items[item.item]->getPrice(ItemManager::USE_VENDOR_RATIO);
+		if (price > 0)
+			return currency / price;
+		else
+			return item.quantity;
+	}
+	else if (vendor_tab == ItemManager::VENDOR_SELL) {
+		int price = items->items[item.item]->getSellPrice(item.can_buyback);
+		if (price > 0)
+			return currency / price;
+		else
+			return item.quantity;
+	}
 	else if (vendor_tab == ItemManager::VENDOR_CRAFT)
 		return items->items[item.item]->getCraftCount();
 	else

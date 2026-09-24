@@ -1842,6 +1842,9 @@ int Item::getCraftCount() {
 
 	for (size_t i = 0; i < crafting_items.size(); ++i) {
 		ItemStack &stack = crafting_items[i];
+		if (stack.quantity <= 0)
+			continue;
+
 		int item_count = menu->inv->inventory[MenuInventory::CARRIED].count(stack.item);
 		item_count += menu->inv->inventory[MenuInventory::EQUIPMENT].count(stack.item);
 		craft_count = std::min(craft_count, item_count / stack.quantity);
