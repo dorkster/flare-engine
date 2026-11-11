@@ -15,6 +15,7 @@
 .*.sw*
 /flare.desktop
 gmon.out
+/.cache
 
 # ignore copy-on-write backup files
 *~
