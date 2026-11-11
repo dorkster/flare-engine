@@ -1461,7 +1461,7 @@ void MenuPowers::renderPowers(int tab_num) {
 		}
 
 		// upgrade buttons
-		if (power_cell[i].upgrade_button)
+		if (power_cell[i].upgrade_button && slot_cell->requires_point)
 			power_cell[i].upgrade_button->render();
 	}
 }
